@@ -102,8 +102,8 @@ func (l *ProjAppList) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
 	return l.RegisterInitializeOp()
 }
 
-// RegisterListPagingOp when change page, filter needed
-func (l *ProjAppList) RegisterListPagingOp(opData list.OpChangePage) (opFunc cptype.OperationFunc) {
+// RegisterChangePage when change page, filter needed
+func (l *ProjAppList) RegisterChangePage(opData list.OpChangePage) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 		if opData.ClientData.PageNo > 0 {
 			l.filterReq.PageNo = opData.ClientData.PageNo
@@ -190,9 +190,9 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 			LogoURL: "",
 			// TODO: star
 			Star: false,
-			Labels: []list.ItemLabel{
+			TitleState: []list.StateInfo{
 				{
-					Label: p.ProjectDTO.Type,
+					Text: l.sdk.I18n(p.ProjectDTO.Type),
 				},
 			},
 			Description: p.ProjectDTO.DisplayName,
@@ -200,10 +200,7 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 			// TODO: operation
 			Operations: map[cptype.OperationKey]cptype.Operation{},
 			// TODO: operation
-			MoreOperations: list.MoreOperations{
-				Operations:      map[cptype.OperationKey]cptype.Operation{},
-				OperationsOrder: []cptype.OperationKey{},
-			},
+			MoreOperations: []list.MoreOpItem{},
 		}
 		data.List = append(data.List, item)
 	}
@@ -242,9 +239,9 @@ func (l *ProjAppList) doFilterApp() *list.Data {
 			LogoURL: "",
 			// TODO: star
 			Star: false,
-			Labels: []list.ItemLabel{
+			TitleState: []list.StateInfo{
 				{
-					Label: p.Mode,
+					Text: l.sdk.I18n(p.Mode),
 				},
 			},
 			Description: p.Desc,
@@ -252,10 +249,7 @@ func (l *ProjAppList) doFilterApp() *list.Data {
 			// TODO: operation
 			Operations: map[cptype.OperationKey]cptype.Operation{},
 			// TODO: operation
-			MoreOperations: list.MoreOperations{
-				Operations:      map[cptype.OperationKey]cptype.Operation{},
-				OperationsOrder: []cptype.OperationKey{},
-			},
+			MoreOperations: []list.MoreOpItem{},
 		}
 		data.List = append(data.List, item)
 	}

@@ -18,11 +18,7 @@ import (
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
 	"github.com/erda-project/erda-infra/providers/component-protocol/utils/cputil"
 	"github.com/erda-project/erda/apistructs"
-)
-
-const (
-	KeyWorkbenchItemType = "WorkbenchItemType"
-	KeyFilterName        = "FilterName"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 )
 
 type GSHelper struct {
@@ -33,18 +29,18 @@ func NewGSHelper(gs *cptype.GlobalStateData) *GSHelper {
 	return &GSHelper{gs: gs}
 }
 
-func (h *GSHelper) SetWorkbenchItemType(wbType apistructs.WorkbenchItemType) {
+func (h *GSHelper) SetWorkbenchItemType(wbType string) {
 	if h.gs == nil {
 		return
 	}
-	(*h.gs)[KeyWorkbenchItemType] = wbType
+	(*h.gs)[common.WorkTabKey] = wbType
 }
 
 func (h *GSHelper) GetWorkbenchItemType() (apistructs.WorkbenchItemType, bool) {
 	if h.gs == nil {
 		return "", false
 	}
-	v, ok := (*h.gs)[KeyWorkbenchItemType]
+	v, ok := (*h.gs)[common.WorkTabKey]
 	if !ok {
 		return "", false
 	}
@@ -57,14 +53,14 @@ func (h *GSHelper) SetFilterName(name string) {
 	if h.gs == nil {
 		return
 	}
-	(*h.gs)[KeyFilterName] = name
+	(*h.gs)[common.FilterNameKey] = name
 }
 
 func (h *GSHelper) GetFilterName() (string, bool) {
 	if h.gs == nil {
 		return "", false
 	}
-	v, ok := (*h.gs)[KeyFilterName]
+	v, ok := (*h.gs)[common.FilterNameKey]
 	if !ok {
 		return "", false
 	}

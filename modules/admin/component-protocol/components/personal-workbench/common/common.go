@@ -24,12 +24,11 @@ import (
 const (
 	ScenarioKey = "personal-workbench"
 
-	// TabKey imply workTabs statuses
-	TabKey = "tabkey"
-	// TabProject imply workTabs project status .
-	TabProject = "TabProject"
-	// TabApplication imply workTabs application status.
-	TabApplication = "TabApplication"
+	// FilterNameKey list query key
+	FilterNameKey = "FilterName"
+	// WorkTabKey work tab switch, e.g: project, app
+	WorkTabKey = "workTabKey"
+
 	// TabData load data from tabs transfer with global state.
 	TabData = "tabData"
 
