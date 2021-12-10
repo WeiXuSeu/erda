@@ -22,4 +22,6 @@ const (
 	I18nKeyMspLast24HAlertCount = "Last24HAlertCount"
 	I18nKeyMrCount              = "MrCount"
 	I18nKeyRuntimeCount         = "RuntimeCount"
+	I18nKeySearchByProjectName  = "SearchByProjectName"
+	I18nKeySearchByAppName      = "SearchByAppName"
 )

@@ -27,6 +27,7 @@ import (
 	"github.com/erda-project/erda/apistructs"
 	"github.com/erda-project/erda/bundle"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common/gshelper"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
 	"github.com/erda-project/erda/modules/cmp/component-protocol/types"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
@@ -70,7 +71,7 @@ func (wt *WorkTabs) GetComponentValue() {
 }
 
 func (wt *WorkTabs) GetState() State {
-	return State{Value: common.TabProject}
+	return State{Value: apistructs.WorkbenchItemProj.String()}
 }
 
 func (wt *WorkTabs) SetState(state cptype.ComponentState) {
@@ -110,8 +111,8 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 		err     error
 	)
 	wtData := Data{Options: []Option{
-		{Value: common.TabProject, Label: wt.SDK.I18n("project")},
-		{Value: common.TabApplication, Label: wt.SDK.I18n("app")},
+		{Value: apistructs.WorkbenchItemProj.String(), Label: wt.SDK.I18n("project")},
+		{Value: apistructs.WorkbenchItemApp.String(), Label: wt.SDK.I18n("app")},
 	}}
 	apiIdentity := apistructs.Identity{}
 	apiIdentity.UserID = wt.SDK.Identity.UserID
@@ -136,9 +137,9 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 	}()
 	wg.Wait()
 	switch wt.State.Value {
-	case common.TabProject:
+	case apistructs.WorkbenchItemProj.String():
 		(*gs)[common.TabData] = proData
-	case common.TabApplication:
+	case apistructs.WorkbenchItemApp.String():
 		(*gs)[common.TabData] = appData
 	}
 	if proData != nil {
@@ -152,9 +153,11 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 
 // Render is empty implement.
 func (wt *WorkTabs) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
+	// init with project
+	wt.State.Value = apistructs.WorkbenchItemProj.String()
 	wt.GetComponentValue()
-	wt.State.Value = common.TabProject
 	wt.SDK = cputil.SDK(ctx)
+	gh := gshelper.NewGSHelper(gs)
 	wt.Wb = wt.SDK.Ctx.Value(types.Workbench).(*workbench.Workbench)
 
 	switch event.Operation {
@@ -169,6 +172,7 @@ func (wt *WorkTabs) Render(ctx context.Context, c *cptype.Component, scenario cp
 		logrus.Errorf("scenario %v component WorkTabs does not support event %v", scenario, event)
 		return nil
 	}
+	gh.SetWorkbenchItemType(wt.State.Value)
 	wtData, err := wt.GetData(gs)
 	if err != nil {
 		return err

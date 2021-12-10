@@ -35,6 +35,10 @@ func (w WorkbenchItemType) IsEmpty() bool {
 	return string(w) == ""
 }
 
+func (w WorkbenchItemType) String() string {
+	return string(w)
+}
+
 type WorkbenchProjAppRequest struct {
 	// e.g: project/app
 	Type WorkbenchItemType `json:"type"`
