@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package projAppList
 
 import (
-	"github.com/erda-project/erda-infra/base/servicehub"
-	"github.com/erda-project/erda/pkg/common"
+	"fmt"
 
-	_ "github.com/erda-project/erda-infra/providers"
-	_ "github.com/erda-project/erda/modules/admin"
-	_ "github.com/erda-project/erda/modules/admin/dingtalktest"
-
-	// component protocol
-	_ "github.com/erda-project/erda/modules/admin/component-protocol/components"
+	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
 )
 
-func main() {
-	common.Run(&servicehub.RunOptions{
-		ConfigFile: "conf/admin/admin.yaml",
-	})
+// demo
+func (l *ProjAppList) regNonStdOp1() cptype.OperationFunc {
+	return func(sdk *cptype.SDK) {
+		fmt.Println("This is NonStdOp1")
+	}
 }

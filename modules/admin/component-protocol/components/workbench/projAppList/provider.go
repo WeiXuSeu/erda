@@ -25,7 +25,6 @@ import (
 	"github.com/erda-project/erda-infra/providers/component-protocol/utils/cputil"
 	"github.com/erda-project/erda/apistructs"
 	"github.com/erda-project/erda/bundle"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common/convert"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common/gshelper"
 	"github.com/erda-project/erda/modules/admin/component-protocol/types"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
@@ -33,7 +32,7 @@ import (
 )
 
 const (
-	CompProjAppList = "ProjAppList"
+	CompProjAppList = "workList"
 
 	DefaultPageNo   uint64 = 1
 	DefaultPageSize uint64 = 10
@@ -43,6 +42,7 @@ type ProjAppList struct {
 	base.DefaultProvider
 	impl.DefaultList
 
+	sdk   *cptype.SDK
 	bdl   *bundle.Bundle
 	wbSvc *workbench.Workbench
 
@@ -62,6 +62,7 @@ func (l *ProjAppList) Finalize(sdk *cptype.SDK) {}
 
 func (l *ProjAppList) BeforeHandleOp(sdk *cptype.SDK) {
 	// get svc info
+	l.sdk = sdk
 	l.bdl = sdk.Ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
 	l.wbSvc = sdk.Ctx.Value(types.WorkbenchSvc).(*workbench.Workbench)
 
@@ -181,13 +182,12 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 	}
 
 	for _, p := range projs.List {
-		// TODO: construct list item
 		item := list.Item{
 			ID:    strconv.FormatUint(p.ProjectDTO.ID, 10),
 			Title: p.ProjectDTO.Name,
 			// TODO: url
 			LogoURL: "",
-			// TODO: operation
+			// TODO: star
 			Star: false,
 			Labels: []list.ItemLabel{
 				{
@@ -195,9 +195,7 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 				},
 			},
 			Description: p.ProjectDTO.DisplayName,
-			// TODO: url
-			BackgroundImgURL: "",
-			KvInfos:          convert.GenProjKvInfo(p),
+			KvInfos:     l.GenProjKvInfo(p),
 			// TODO: operation
 			Operations: map[cptype.OperationKey]cptype.Operation{},
 			// TODO: operation
@@ -213,5 +211,52 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 
 func (l *ProjAppList) doFilterApp() *list.Data {
 	var data list.Data
+
+	req := apistructs.ApplicationListRequest{
+		Query:    l.filterReq.Query,
+		PageSize: int(l.filterReq.PageSize),
+		PageNo:   int(l.filterReq.PageNo),
+	}
+
+	// TODO: set custom mr query rate
+	apps, err := l.wbSvc.ListAppWbData(l.identity, req, 0)
+	if err != nil {
+		panic(fmt.Errorf("list query app workbench data failed, error: %v", err))
+	}
+
+	data = list.Data{
+		Total:    uint64(apps.TotalApps),
+		PageNo:   l.filterReq.PageNo,
+		PageSize: l.filterReq.PageSize,
+		Operations: map[cptype.OperationKey]cptype.Operation{
+			list.OpChangePage{}.OpKey(): cputil.NewOpBuilder().Build(),
+		},
+	}
+
+	for _, p := range apps.List {
+		item := list.Item{
+			ID:    strconv.FormatUint(p.ID, 10),
+			Title: p.Name,
+			// TODO: url
+			LogoURL: "",
+			// TODO: star
+			Star: false,
+			Labels: []list.ItemLabel{
+				{
+					Label: p.Mode,
+				},
+			},
+			Description: p.Desc,
+			KvInfos:     l.GenAppKvInfo(p),
+			// TODO: operation
+			Operations: map[cptype.OperationKey]cptype.Operation{},
+			// TODO: operation
+			MoreOperations: list.MoreOperations{
+				Operations:      map[cptype.OperationKey]cptype.Operation{},
+				OperationsOrder: []cptype.OperationKey{},
+			},
+		}
+		data.List = append(data.List, item)
+	}
 	return &data
 }
