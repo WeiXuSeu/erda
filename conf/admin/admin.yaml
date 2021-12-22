@@ -12,3 +12,25 @@ health:
 service-register:
 
 erda.admin.dingtalk-test:
+
+# component-protocol framework
+component-protocol:
+# components uri of specific file
+component-protocol.components.workbench.workCards:
+component-protocol.components.workbench.head:
+component-protocol.components.workbench.page:
+component-protocol.components.workbench.projectAppList:
+component-protocol.components.workbench.leftContainer:
+component-protocol.components.workbench.rightContainer:
+component-protocol.components.workbench.workTabs:
+component-protocol.components.workbench.workContainer:
+
+
+i18n@cp:
+  common:
+    - conf/admin/i18n/cp/common.yaml
+  files:
+    - conf/admin/i18n/cp/scenarios/
+i18n:
+  common:
+    - conf/admin/i18n/cp/common.yaml # TODO : distinguish between admin global common.yaml and cp/common.yaml
