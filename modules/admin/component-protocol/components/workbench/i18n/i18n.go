@@ -12,22 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package i18n
 
-import (
-	"github.com/erda-project/erda-infra/base/servicehub"
-	"github.com/erda-project/erda/pkg/common"
-
-	_ "github.com/erda-project/erda-infra/providers"
-	_ "github.com/erda-project/erda/modules/admin"
-	_ "github.com/erda-project/erda/modules/admin/dingtalktest"
-
-	// component protocol
-	_ "github.com/erda-project/erda/modules/admin/component-protocol/components"
+const (
+	I18nKeyIssueExpired         = "IssueExpired"
+	I18nKeyIssueExpiredToday    = "IssueExpiredToday"
+	I18nKeyIssueUndo            = "IssueUndo"
+	I18nKeyMspServiceCount      = "ServiceCount"
+	I18nKeyMspLast24HAlertCount = "Last24HAlertCount"
+	I18nKeyMrCount              = "MrCount"
+	I18nKeyRuntimeCount         = "RuntimeCount"
 )
-
-func main() {
-	common.Run(&servicehub.RunOptions{
-		ConfigFile: "conf/admin/admin.yaml",
-	})
-}
