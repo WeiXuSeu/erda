@@ -25,7 +25,7 @@ import (
 
 // GenProjKvInfo show type: DevOps, MSP, DevOps(primary)/MSP
 // TODO: operations
-func (l *ProjAppList) GenProjKvInfo(proj apistructs.WorkbenchProjOverviewItem) (kvs []list.KvInfo) {
+func (l *WorkList) GenProjKvInfo(proj apistructs.WorkbenchProjOverviewItem) (kvs []list.KvInfo) {
 
 	switch proj.ProjectDTO.Type {
 	case types.ProjTypeDevops:

@@ -23,7 +23,7 @@ import (
 )
 
 // GenAppKvInfo show: mr num, runtime num
-func (l *ProjAppList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvInfo) {
+func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvInfo) {
 	kvs = []list.KvInfo{
 		// mr count
 		{
