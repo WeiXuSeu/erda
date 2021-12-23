@@ -112,17 +112,19 @@ func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
 		return
 	}
 	data := cardlist.Data{}
-	if tab, ok := (*sdk.GlobalState)[common.TabKey]; !ok {
+	if tab, ok := (*sdk.GlobalState)[common.WorkTabKey]; !ok {
 		tabStr = wc.State.TabName
 	} else {
 		tabStr = tab.(string)
 	}
 	switch tabStr {
-	case common.TabApplication:
+	case apistructs.WorkbenchItemApp.String():
+		data.Title = sdk.I18n("star application")
 		apps, err := wc.wb.ListSubAppWbData(apiIdentity, 0)
 		if err != nil {
 			return
 		}
+		data.TitleSummary = fmt.Sprintf("%d", len(apps.List))
 		for i, app := range apps.List {
 			data.Cards = append(data.Cards, cardlist.Card{
 				ID:     fmt.Sprintf("%d", i),
@@ -134,11 +136,13 @@ func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
 				Extra:  getAppExtra(sdk, app),
 			})
 		}
-	case common.TabProject:
+	case apistructs.WorkbenchItemProj.String():
+		data.Title = sdk.I18n("star project")
 		projects, err := wc.wb.ListSubProjWbData(apiIdentity)
 		if err != nil {
 			return
 		}
+		data.TitleSummary = fmt.Sprintf("%d", len(projects.List))
 		for i, _ := range projects.List {
 			data.Cards = append(data.Cards, cardlist.Card{
 				ID:     fmt.Sprintf("%d", i),

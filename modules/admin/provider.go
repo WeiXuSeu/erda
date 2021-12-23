@@ -67,6 +67,7 @@ func (p *provider) Init(ctx servicehub.Context) error {
 		bundle.WithOrchestrator(),
 		bundle.WithEventBox(),
 		bundle.WithGittar(),
+		//bundle.WithDOP(),
 		bundle.WithPipeline(),
 		bundle.WithMonitor(),
 		bundle.WithCollector(),
