@@ -21,7 +21,6 @@ import (
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/messageList"
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/messageTabs"
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/page"
-	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/projAppList"
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/rightContent"
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/userProfile"
 	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/workCards"

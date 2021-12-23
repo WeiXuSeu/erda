@@ -36,6 +36,12 @@ const (
 	ProjectService = "projectService"
 
 	EventChangeEventTab = "onChange"
+
+	// KeyProjectID  operation related keys
+	KeyProjectID = "projectId"
+
+	// TargetProjAllIssue target related keys
+	TargetProjAllIssue = "projectAllIssue"
 )
 
 var (
