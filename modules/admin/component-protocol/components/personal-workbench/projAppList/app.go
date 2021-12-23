@@ -19,7 +19,7 @@ import (
 
 	"github.com/erda-project/erda-infra/providers/component-protocol/components/list"
 	"github.com/erda-project/erda/apistructs"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/i18n"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/i18n"
 )
 
 // GenAppKvInfo show: mr num, runtime num

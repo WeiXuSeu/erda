@@ -25,14 +25,15 @@ import (
 	"github.com/erda-project/erda-infra/providers/component-protocol/utils/cputil"
 	"github.com/erda-project/erda/apistructs"
 	"github.com/erda-project/erda/bundle"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common/gshelper"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common/gshelper"
 	"github.com/erda-project/erda/modules/admin/component-protocol/types"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
 const (
-	CompProjAppList = "workList"
+	CompProjAppList = "projAppList"
 
 	DefaultPageNo   uint64 = 1
 	DefaultPageSize uint64 = 10
@@ -51,7 +52,7 @@ type ProjAppList struct {
 }
 
 func init() {
-	base.InitProviderWithCreator(types.ScenarioWorkbench, CompProjAppList, func() servicehub.Provider {
+	base.InitProviderWithCreator(common.ScenarioKey, CompProjAppList, func() servicehub.Provider {
 		return &ProjAppList{}
 	})
 }

@@ -23,34 +23,47 @@ import (
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
 	"github.com/erda-project/erda/apistructs"
 	"github.com/erda-project/erda/bundle"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
-const (
-	stateKeyIssueViewGroupValue         = "issueViewGroupValue"         // kanban
-	stateKeyIssueViewGroupChildrenValue = "issueViewGroupChildrenValue" // kanban: status
-	stateKeyIssueFilterConditions       = "filterConditions"            // apistructs.IssuePagingRequest
-)
-
-type CardList struct {
+type WorkCards struct {
 	base.DefaultProvider
 	impl.DefaultCard
 	filterReq apistructs.IssuePagingRequest
-
-	bdl *bundle.Bundle
-	wb  *workbench.Workbench
+	State     State `json:"state"`
+	bdl       *bundle.Bundle
+	wb        *workbench.Workbench
 }
 
-func (c *CardList) RegisterInitializeOp() (opFunc cptype.OperationFunc) {
+func (wc *WorkCards) RegisterCardListGotoOp(opData cardlist.OpCardListGoto) (opFunc cptype.OperationFunc) {
+	//TODO implement me
+	return func(sdk *cptype.SDK) {}
+}
+
+func (wc *WorkCards) RegisterCardIconGotoOp(opData cardlist.OpCardListIconGoto) (opFunc cptype.OperationFunc) {
+	//TODO implement me
+	return func(sdk *cptype.SDK) {}
+}
+
+func (wc *WorkCards) RegisterCardListStarOp(opData cardlist.OpCardListStar) (opFunc cptype.OperationFunc) {
+	//TODO implement me
+	return func(sdk *cptype.SDK) {}
+}
+
+type State struct {
+	TabName string `json:"tabName"`
+}
+
+func (wc *WorkCards) RegisterInitializeOp() (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
-		c.LoadList(sdk)
+		wc.LoadList(sdk)
 	}
 }
 
-func (c *CardList) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
-	return c.RegisterInitializeOp()
+func (wc *WorkCards) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
+	return wc.RegisterInitializeOp()
 }
 
 type TextMeta struct {
@@ -91,54 +104,58 @@ func getProjectExtra(sdk *cptype.SDK) cptype.Extra {
 	return cptype.Extra{}
 }
 
-func (c *CardList) LoadList(sdk *cptype.SDK) {
+func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
+	tabStr := ""
 	apiIdentity := apistructs.Identity{}
-	err := common.Transfer(apiIdentity, sdk.Identity)
+	err := common.Transfer(sdk.Identity, apiIdentity)
 	if err != nil {
 		return
 	}
 	data := cardlist.Data{}
-	if tab, ok := (*sdk.GlobalState)[common.TabKey]; ok {
-		switch tab {
-		case common.TabApplication:
-			apps, err := c.wb.ListSubAppWbData(apiIdentity, 0)
-			if err != nil {
-				return
-			}
-			for i, app := range apps.List {
-				data.Cards = append(data.Cards, cardlist.Card{
-					ID:     fmt.Sprintf("%d", i),
-					ImgURL: "",
-					Icon:   "",
-					Title:  app.Name,
-					Labels: nil,
-					Star:   true,
-					Extra:  getAppExtra(sdk, app),
-				})
-			}
-		case common.TabProject:
-			projects, err := c.wb.ListSubProjWbData(apiIdentity)
-			if err != nil {
-				return
-			}
-			for i, _ := range projects.List {
-				data.Cards = append(data.Cards, cardlist.Card{
-					ID:     fmt.Sprintf("%d", i),
-					ImgURL: "",
-					Icon:   "",
-					Title:  "",
-					Labels: nil,
-					Star:   true,
-					Extra:  getProjectExtra(sdk),
-				})
-			}
+	if tab, ok := (*sdk.GlobalState)[common.TabKey]; !ok {
+		tabStr = wc.State.TabName
+	} else {
+		tabStr = tab.(string)
+	}
+	switch tabStr {
+	case common.TabApplication:
+		apps, err := wc.wb.ListSubAppWbData(apiIdentity, 0)
+		if err != nil {
+			return
+		}
+		for i, app := range apps.List {
+			data.Cards = append(data.Cards, cardlist.Card{
+				ID:     fmt.Sprintf("%d", i),
+				ImgURL: "",
+				Icon:   "",
+				Title:  app.Name,
+				Labels: nil,
+				Star:   true,
+				Extra:  getAppExtra(sdk, app),
+			})
+		}
+	case common.TabProject:
+		projects, err := wc.wb.ListSubProjWbData(apiIdentity)
+		if err != nil {
+			return
+		}
+		for i, _ := range projects.List {
+			data.Cards = append(data.Cards, cardlist.Card{
+				ID:     fmt.Sprintf("%d", i),
+				ImgURL: "",
+				Icon:   "",
+				Title:  "",
+				Labels: nil,
+				Star:   true,
+				Extra:  getProjectExtra(sdk),
+			})
 		}
 	}
-	c.StdDataPtr = &data
+	wc.StdDataPtr = &data
 }
 
 func init() {
 	base.InitProviderWithCreator(common.ScenarioKey, "workCards", func() servicehub.Provider {
-		return &CardList{}
+		return &WorkCards{}
 	})
 }

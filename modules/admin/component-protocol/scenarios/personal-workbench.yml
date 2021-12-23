@@ -5,26 +5,32 @@ hierarchy:
   structure:
     page:
       left:
-        leftContent
+       leftContent
       right:
-        userProfile
+       rightContent
     leftContent:
       - head
       - workTabs
       - workContainer
       - messageTabs
-      - messageList
+      - messageContainer
+    rightContent:
+      - userProfile
     workContainer:
       - workCards
       - workList
+    messageContainer:
+      - messageList
     workList:
       filter:
-        workListFilter
+      - workListFilter
 
 components:
   page:
     type: LRContainer
   leftContent:
+    type: Container
+  rightContent:
     type: Container
   userProfile:
     type: Custom
@@ -40,6 +46,8 @@ components:
     type: List
   workListFilter:
     type: ContractiveFilter
+  messageContainer:
+    type: Container
   messageTabs:
     type: RadioTabs
   messageList:
@@ -51,16 +59,18 @@ rendering:
   __DefaultRendering__:
     - name: page
     - name: leftContent
+    - name: rightContent
     - name: userProfile
     - name: head
     - name: workTabs
     - name: workContainer
     - name: workCards
       state:
-        - name: "tabs"
-          value: "{{ workTabs.state.Value }}"
+        - name: "tabName"
+          value: "{{ workTabs.value }}"
     - name: workListFilter
     - name: workList
+    - name: messageContainer
     - name: messageTabs
     - name: messageList
 

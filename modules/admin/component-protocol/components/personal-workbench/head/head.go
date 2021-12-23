@@ -19,7 +19,7 @@ import (
 
 	"github.com/erda-project/erda-infra/base/servicehub"
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 

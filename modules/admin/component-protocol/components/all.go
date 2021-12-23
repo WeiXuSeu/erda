@@ -15,5 +15,5 @@
 package components
 
 import (
-	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/workBench"
+	_ "github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench"
 )

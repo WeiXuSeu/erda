@@ -12,32 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package page
+package messageContainer
 
 import (
 	"context"
 
 	"github.com/erda-project/erda-infra/base/servicehub"
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
-type Page struct {
+type MessageContainer struct {
 	base.DefaultProvider
 	Type string
 }
 
-func (p *Page) Init(ctx servicehub.Context) error {
+func (p *MessageContainer) Init(ctx servicehub.Context) error {
 	return p.DefaultProvider.Init(ctx)
 }
 
-func (p Page) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
+func (p MessageContainer) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
 	return nil
 }
 
 func init() {
-	base.InitProviderWithCreator(common.ScenarioKey, "page", func() servicehub.Provider {
-		return &Page{Type: "LRContainer"}
+	base.InitProviderWithCreator(common.ScenarioKey, "messageContainer", func() servicehub.Provider {
+		return &MessageContainer{}
 	})
 }

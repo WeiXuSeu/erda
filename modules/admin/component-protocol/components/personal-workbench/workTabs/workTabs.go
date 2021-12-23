@@ -25,8 +25,10 @@ import (
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
 	"github.com/erda-project/erda-infra/providers/component-protocol/utils/cputil"
 	"github.com/erda-project/erda/apistructs"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common"
+	"github.com/erda-project/erda/bundle"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
+	"github.com/erda-project/erda/modules/cmp/component-protocol/types"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
@@ -54,13 +56,14 @@ type State struct {
 type WorkTabs struct {
 	base.DefaultProvider
 	SDK        *cptype.SDK
-	Data       Data `json:"data"`
-	wb         *workbench.Workbench
+	Bdl        *bundle.Bundle
+	Wb         *workbench.Workbench
+	Data       Data                 `json:"data"`
 	Operations map[string]Operation `json:"operations"`
 	State      State                `json:"state"`
 }
 
-func (wt *WorkTabs) GetComponentValue(c cptype.Component) {
+func (wt *WorkTabs) GetComponentValue() {
 	wt.State = wt.GetState()
 	wt.Operations = wt.GetOperation()
 	return
@@ -111,15 +114,13 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 		{Value: common.TabApplication, Label: wt.SDK.I18n("app")},
 	}}
 	apiIdentity := apistructs.Identity{}
-	err = common.Transfer(wt.SDK.Identity, apiIdentity)
-	if err != nil {
-		return wtData, err
-	}
+	apiIdentity.UserID = wt.SDK.Identity.UserID
+	apiIdentity.OrgID = wt.SDK.Identity.OrgID
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
 		pageReq := apistructs.PageRequest{}
-		proData, err = wt.wb.ListQueryProjWbData(apiIdentity, pageReq, "")
+		proData, err = wt.Wb.ListQueryProjWbData(apiIdentity, pageReq, "")
 		if err != nil {
 			logrus.Errorf("tabs get project list err %v", err)
 		}
@@ -127,7 +128,7 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 	}()
 	go func() {
 		appReq := apistructs.ApplicationListRequest{}
-		appData, err = wt.wb.ListAppWbData(apiIdentity, appReq, 0)
+		appData, err = wt.Wb.ListAppWbData(apiIdentity, appReq, 0)
 		if err != nil {
 			logrus.Errorf("tabs get app list err %v", err)
 		}
@@ -140,19 +141,26 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 	case common.TabApplication:
 		(*gs)[common.TabData] = appData
 	}
-	wtData.Options[0].Label += fmt.Sprintf("(%d)", proData.Total)
-	wtData.Options[1].Label += fmt.Sprintf("(%d)", appData.TotalApps)
+	if proData != nil {
+		wtData.Options[0].Label += fmt.Sprintf("(%d)", proData.Total)
+	}
+	if appData != nil {
+		wtData.Options[1].Label += fmt.Sprintf("(%d)", appData.TotalApps)
+	}
 	return wtData, nil
 }
 
 // Render is empty implement.
 func (wt *WorkTabs) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
+	wt.GetComponentValue()
 	wt.State.Value = common.TabProject
 	wt.SDK = cputil.SDK(ctx)
+	wt.Wb = wt.SDK.Ctx.Value(types.Workbench).(*workbench.Workbench)
+
 	switch event.Operation {
 	case cptype.InitializeOperation:
 	case common.EventChangeEventTab:
-		err := common.Transfer(wt.Operations, c.Operations)
+		err := common.Transfer(c.Operations, &wt.Operations)
 		if err != nil {
 			return err
 		}
