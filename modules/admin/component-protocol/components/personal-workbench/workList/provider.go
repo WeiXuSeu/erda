@@ -15,8 +15,9 @@
 package workList
 
 import (
-	"fmt"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/erda-project/erda-infra/base/servicehub"
 	"github.com/erda-project/erda-infra/providers/component-protocol/components/list"
@@ -131,7 +132,8 @@ func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.Ope
 
 		id, err := strconv.Atoi(opData.ClientData.DataRef.ID)
 		if err != nil {
-			panic(fmt.Errorf("star operation, format ClientData id failed, id: %v, error: %v", opData.ClientData.DataRef.ID, err))
+			logrus.Errorf("star operation, format ClientData id failed, id: %v, error: %v", opData.ClientData.DataRef.ID, err)
+			return
 		}
 		tpID = uint64(id)
 
@@ -144,7 +146,8 @@ func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.Ope
 
 		_, err = l.bdl.CreateSubscribe(l.identity.UserID, l.identity.OrgID, req)
 		if err != nil {
-			panic(fmt.Errorf("star %v %v failed, id: %v, error: %v", req.Type, req.Name, req.TypeID, err))
+			logrus.Errorf("star %v %v failed, id: %v, error: %v", req.Type, req.Name, req.TypeID, err)
+			return
 		}
 	}
 }
@@ -176,7 +179,8 @@ func (l *WorkList) doFilterProj() *list.Data {
 	var data list.Data
 	projs, err := l.wbSvc.ListQueryProjWbData(l.identity, l.filterReq.PageRequest, l.filterReq.Query)
 	if err != nil {
-		panic(fmt.Errorf("list query projct workbench data failed, error: %v", err))
+		logrus.Errorf("list query projct workbench data failed, error: %v", err)
+		return &data
 	}
 
 	data = list.Data{
@@ -232,7 +236,8 @@ func (l *WorkList) doFilterApp() *list.Data {
 	// TODO: set custom mr query rate
 	apps, err := l.wbSvc.ListAppWbData(l.identity, req, 0)
 	if err != nil {
-		panic(fmt.Errorf("list query app workbench data failed, error: %v", err))
+		logrus.Errorf("list query app workbench data failed, error: %v", err)
+		return &data
 	}
 
 	data = list.Data{
