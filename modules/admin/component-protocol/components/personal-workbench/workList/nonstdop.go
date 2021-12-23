@@ -21,7 +21,7 @@ import (
 )
 
 // demo
-func (l *ProjAppList) regNonStdOp1() cptype.OperationFunc {
+func (l *WorkList) regNonStdOp1() cptype.OperationFunc {
 	return func(sdk *cptype.SDK) {
 		fmt.Println("This is NonStdOp1")
 	}

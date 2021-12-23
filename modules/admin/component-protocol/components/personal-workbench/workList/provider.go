@@ -39,7 +39,7 @@ const (
 	DefaultPageSize uint64 = 10
 )
 
-type ProjAppList struct {
+type WorkList struct {
 	base.DefaultProvider
 	impl.DefaultList
 
@@ -53,15 +53,15 @@ type ProjAppList struct {
 
 func init() {
 	base.InitProviderWithCreator(common.ScenarioKey, CompWorkList, func() servicehub.Provider {
-		return &ProjAppList{}
+		return &WorkList{}
 	})
 }
 
-func (l *ProjAppList) Initialize(sdk *cptype.SDK) {}
+func (l *WorkList) Initialize(sdk *cptype.SDK) {}
 
-func (l *ProjAppList) Finalize(sdk *cptype.SDK) {}
+func (l *WorkList) Finalize(sdk *cptype.SDK) {}
 
-func (l *ProjAppList) BeforeHandleOp(sdk *cptype.SDK) {
+func (l *WorkList) BeforeHandleOp(sdk *cptype.SDK) {
 	// get svc info
 	l.sdk = sdk
 	l.bdl = sdk.Ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
@@ -92,18 +92,18 @@ func (l *ProjAppList) BeforeHandleOp(sdk *cptype.SDK) {
 	}
 }
 
-func (l *ProjAppList) RegisterInitializeOp() (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterInitializeOp() (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 		l.StdDataPtr = l.doFilter()
 	}
 }
 
-func (l *ProjAppList) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
 	return l.RegisterInitializeOp()
 }
 
 // RegisterChangePage when change page, filter needed
-func (l *ProjAppList) RegisterChangePage(opData list.OpChangePage) (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterChangePage(opData list.OpChangePage) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 		if opData.ClientData.PageNo > 0 {
 			l.filterReq.PageNo = opData.ClientData.PageNo
@@ -116,7 +116,7 @@ func (l *ProjAppList) RegisterChangePage(opData list.OpChangePage) (opFunc cptyp
 }
 
 // RegisterItemStarOp when item stared, filter is unnecessary
-func (l *ProjAppList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 		var (
 			tp   apistructs.SubscribeType
@@ -149,19 +149,19 @@ func (l *ProjAppList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.
 	}
 }
 
-func (l *ProjAppList) RegisterItemClickGotoOp(opData list.OpItemClickGoto) (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterItemClickGotoOp(opData list.OpItemClickGoto) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 
 	}
 }
 
-func (l *ProjAppList) RegisterItemClickOp(opData list.OpItemClick) (opFunc cptype.OperationFunc) {
+func (l *WorkList) RegisterItemClickOp(opData list.OpItemClick) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
 
 	}
 }
 
-func (l *ProjAppList) doFilter() *list.Data {
+func (l *WorkList) doFilter() *list.Data {
 	switch l.filterReq.Type {
 	case apistructs.WorkbenchItemProj:
 		return l.doFilterProj()
@@ -172,7 +172,7 @@ func (l *ProjAppList) doFilter() *list.Data {
 	}
 }
 
-func (l *ProjAppList) doFilterProj() *list.Data {
+func (l *WorkList) doFilterProj() *list.Data {
 	var data list.Data
 	projs, err := l.wbSvc.ListQueryProjWbData(l.identity, l.filterReq.PageRequest, l.filterReq.Query)
 	if err != nil {
@@ -220,7 +220,7 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 	return &data
 }
 
-func (l *ProjAppList) doFilterApp() *list.Data {
+func (l *WorkList) doFilterApp() *list.Data {
 	var data list.Data
 
 	req := apistructs.ApplicationListRequest{
