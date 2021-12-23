@@ -144,9 +144,13 @@ func (wt *WorkTabs) GetData(gs *cptype.GlobalStateData) (Data, error) {
 	}
 	if proData != nil {
 		wtData.Options[0].Label += fmt.Sprintf("(%d)", proData.Total)
+	} else {
+		wtData.Options[0].Label += "(0)"
 	}
 	if appData != nil {
 		wtData.Options[1].Label += fmt.Sprintf("(%d)", appData.TotalApps)
+	} else {
+		wtData.Options[1].Label += "(0)"
 	}
 	return wtData, nil
 }
