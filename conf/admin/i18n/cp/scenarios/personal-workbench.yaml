@@ -1,4 +1,6 @@
 zh:
   Count: 数
   project: 项目
-  application: 应用
+  app: 应用
+  star application: 星标应用
+  star project: 星标项目
