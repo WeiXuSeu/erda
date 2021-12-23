@@ -12,32 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package leftContainer
+package workContainer
 
 import (
 	"context"
 
 	"github.com/erda-project/erda-infra/base/servicehub"
 	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
-	"github.com/erda-project/erda/modules/admin/component-protocol/components/workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
-type Page struct {
+type WorkContainer struct {
 	base.DefaultProvider
 	Type string
 }
 
-func (p *Page) Init(ctx servicehub.Context) error {
+func (p *WorkContainer) Init(ctx servicehub.Context) error {
 	return p.DefaultProvider.Init(ctx)
 }
 
-func (p Page) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
+func (p WorkContainer) Render(ctx context.Context, c *cptype.Component, scenario cptype.Scenario, event cptype.ComponentEvent, gs *cptype.GlobalStateData) error {
 	return nil
 }
 
 func init() {
-	base.InitProviderWithCreator(common.ScenarioKey, "leftContainer", func() servicehub.Provider {
-		return &Page{Type: "Container"}
+	base.InitProviderWithCreator(common.ScenarioKey, "workContainer", func() servicehub.Provider {
+		return &WorkContainer{Type: "Container"}
 	})
 }

@@ -3,6 +3,7 @@ admin:
 
 http-server:
   addr: ":9096"
+  allow_cors: true
 
 
 grpc-server:
@@ -16,14 +17,20 @@ erda.admin.dingtalk-test:
 # component-protocol framework
 component-protocol:
 # components uri of specific file
-component-protocol.components.workbench.workCards:
-component-protocol.components.workbench.head:
-component-protocol.components.workbench.page:
-component-protocol.components.workbench.projectAppList:
-component-protocol.components.workbench.leftContainer:
-component-protocol.components.workbench.rightContainer:
-component-protocol.components.workbench.workTabs:
-component-protocol.components.workbench.workContainer:
+component-protocol.components.personal-workbench.workCards:
+component-protocol.components.personal-workbench.head:
+component-protocol.components.personal-workbench.page:
+component-protocol.components.personal-workbench.projAppList:
+component-protocol.components.personal-workbench.leftContent:
+component-protocol.components.personal-workbench.rightContent:
+component-protocol.components.personal-workbench.workTabs:
+component-protocol.components.personal-workbench.workContainer:
+component-protocol.components.personal-workbench.messageList:
+component-protocol.components.personal-workbench.messageTabs:
+component-protocol.components.personal-workbench.messageContainer:
+component-protocol.components.personal-workbench.userProfile:
+component-protocol.components.personal-workbench.workListFilter:
+component-protocol.components.personal-workbench.workList:
 
 
 i18n@cp:

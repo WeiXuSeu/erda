@@ -16,7 +16,9 @@ package admin
 
 import (
 	"context"
+	"embed"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -25,6 +27,11 @@ import (
 	componentprotocol "github.com/erda-project/erda-infra/providers/component-protocol"
 	"github.com/erda-project/erda/modules/admin/dao"
 	"github.com/erda-project/erda/modules/admin/manager"
+	"github.com/erda-project/erda/modules/admin/services/workbench"
+	"github.com/erda-project/erda/modules/cmp/component-protocol/types"
+	"github.com/erda-project/erda/modules/dop/conf"
+	"github.com/erda-project/erda/pkg/discover"
+	"github.com/erda-project/erda/pkg/http/httpclient"
 	"github.com/erda-project/erda/pkg/http/httpserver"
 	"github.com/erda-project/erda/pkg/jsonstore/etcd"
 )
@@ -52,6 +59,37 @@ func init() {
 
 func (p *provider) Init(ctx servicehub.Context) error {
 	p.Log.Info("init admin")
+
+	p.Log.Info("init component-protocol")
+	bdl := bundle.New(
+		// bundle.WithDOP(), // TODO change to internal method invoke in component-protocol
+		bundle.WithHepa(),
+		bundle.WithOrchestrator(),
+		bundle.WithEventBox(),
+		bundle.WithGittar(),
+		bundle.WithPipeline(),
+		bundle.WithMonitor(),
+		bundle.WithCollector(),
+		bundle.WithHTTPClient(httpclient.New(
+			httpclient.WithTimeout(time.Second*15, time.Duration(conf.BundleTimeoutSecond())*time.Second), // bundle 默认 (time.Second, time.Second*3)
+		)),
+		bundle.WithKMS(),
+		bundle.WithCoreServices(),
+		bundle.WithHTTPClient(
+			httpclient.New(
+				httpclient.WithTimeout(time.Second, time.Second*90),
+				httpclient.WithEnableAutoRetry(false),
+			)),
+		// TODO remove it after internal bundle invoke inside cp issue-manage adjusted
+		bundle.WithCustom(discover.EnvDOP, "localhost:9527"),
+	)
+
+	p.Protocol.SetI18nTran(p.CPTran)
+	wb := workbench.New(workbench.WithBundle(bdl))
+	p.Protocol.WithContextValue(types.Workbench, wb)
+	p.Protocol.WithContextValue(types.GlobalCtxKeyBundle, bdl)
+	protocol.MustRegisterProtocolsFromFS(scenarioFS)
+	p.Log.Info("init component-protocol done")
 
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:     true,
