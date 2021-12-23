@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package projAppList
+package workList
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	CompProjAppList = "projAppList"
+	CompWorkList = "workList"
 
 	DefaultPageNo   uint64 = 1
 	DefaultPageSize uint64 = 10
@@ -52,7 +52,7 @@ type ProjAppList struct {
 }
 
 func init() {
-	base.InitProviderWithCreator(common.ScenarioKey, CompProjAppList, func() servicehub.Provider {
+	base.InitProviderWithCreator(common.ScenarioKey, CompWorkList, func() servicehub.Provider {
 		return &ProjAppList{}
 	})
 }
@@ -155,6 +155,12 @@ func (l *ProjAppList) RegisterItemClickGotoOp(opData list.OpItemClickGoto) (opFu
 	}
 }
 
+func (l *ProjAppList) RegisterItemClickOp(opData list.OpItemClick) (opFunc cptype.OperationFunc) {
+	return func(sdk *cptype.SDK) {
+
+	}
+}
+
 func (l *ProjAppList) doFilter() *list.Data {
 	switch l.filterReq.Type {
 	case apistructs.WorkbenchItemProj:
@@ -174,9 +180,11 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 	}
 
 	data = list.Data{
-		Total:    uint64(projs.Total),
-		PageNo:   l.filterReq.PageNo,
-		PageSize: l.filterReq.PageSize,
+		Total:        uint64(projs.Total),
+		PageNo:       l.filterReq.PageNo,
+		PageSize:     l.filterReq.PageSize,
+		Title:        l.sdk.I18n(apistructs.WorkbenchItemProj.String()),
+		TitleSummary: strconv.FormatInt(int64(projs.Total), 10),
 		Operations: map[cptype.OperationKey]cptype.Operation{
 			list.OpChangePage{}.OpKey(): cputil.NewOpBuilder().Build(),
 		},
@@ -198,7 +206,12 @@ func (l *ProjAppList) doFilterProj() *list.Data {
 			Description: p.ProjectDTO.DisplayName,
 			KvInfos:     l.GenProjKvInfo(p),
 			// TODO: operation
-			Operations: map[cptype.OperationKey]cptype.Operation{},
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().Build(),
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{}).
+					Build(),
+			},
 			// TODO: operation
 			MoreOperations: []list.MoreOpItem{},
 		}
@@ -223,9 +236,11 @@ func (l *ProjAppList) doFilterApp() *list.Data {
 	}
 
 	data = list.Data{
-		Total:    uint64(apps.TotalApps),
-		PageNo:   l.filterReq.PageNo,
-		PageSize: l.filterReq.PageSize,
+		Total:        uint64(apps.TotalApps),
+		PageNo:       l.filterReq.PageNo,
+		PageSize:     l.filterReq.PageSize,
+		Title:        l.sdk.I18n(apistructs.WorkbenchItemApp.String()),
+		TitleSummary: strconv.FormatInt(int64(apps.TotalApps), 10),
 		Operations: map[cptype.OperationKey]cptype.Operation{
 			list.OpChangePage{}.OpKey(): cputil.NewOpBuilder().Build(),
 		},
