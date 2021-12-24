@@ -49,10 +49,12 @@ const (
 	DevOpsProject = "DevOps"
 
 	// OpKeyProjectID  operation related keys
-	OpKeyProjectID = "projectId"
+	OpKeyProjectID           = "projectId"
+	OpKeyIssueFilterUrlQuery = "issueFilter__urlQuery"
 
 	// OpValTargetProjAllIssue target related keys
 	OpValTargetProjAllIssue = "projectAllIssue"
+	OpValTargetProjApps     = "projectApps"
 )
 
 var (

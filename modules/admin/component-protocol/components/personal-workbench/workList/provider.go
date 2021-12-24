@@ -28,6 +28,7 @@ import (
 	"github.com/erda-project/erda/bundle"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common/gshelper"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/i18n"
 	"github.com/erda-project/erda/modules/admin/component-protocol/types"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
@@ -137,18 +138,34 @@ func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.Ope
 		}
 		tpID = uint64(id)
 
-		req := apistructs.CreateSubscribeReq{
-			Type:   tp,
-			TypeID: tpID,
-			Name:   opData.ClientData.DataRef.Title,
-			UserID: l.identity.UserID,
+		// if not star, create subscribe & unstar; else delete subscribe & set state
+		if !opData.ClientData.DataRef.Star {
+			req := apistructs.CreateSubscribeReq{
+				Type:   tp,
+				TypeID: tpID,
+				Name:   opData.ClientData.DataRef.Title,
+				UserID: l.identity.UserID,
+			}
+			_, err = l.bdl.CreateSubscribe(l.identity.UserID, l.identity.OrgID, req)
+			if err != nil {
+				logrus.Errorf("star %v %v failed, id: %v, error: %v", req.Type, req.Name, req.TypeID, err)
+				return
+			}
+			opData.ClientData.DataRef.Star = true
+		} else {
+			req := apistructs.UnSubscribeReq{
+				Type:   tp,
+				TypeID: tpID,
+				UserID: l.identity.UserID,
+			}
+			err = l.bdl.DeleteSubscribe(l.identity.UserID, l.identity.OrgID, req)
+			if err != nil {
+				logrus.Errorf("unstar failed, id: %v, error: %v", req.TypeID, err)
+				return
+			}
+			opData.ClientData.DataRef.Star = true
 		}
 
-		_, err = l.bdl.CreateSubscribe(l.identity.UserID, l.identity.OrgID, req)
-		if err != nil {
-			logrus.Errorf("star %v %v failed, id: %v, error: %v", req.Type, req.Name, req.TypeID, err)
-			return
-		}
 	}
 }
 
@@ -175,19 +192,37 @@ func (l *WorkList) doFilter() *list.Data {
 	}
 }
 
-func (l *WorkList) doFilterProj() *list.Data {
-	var data list.Data
+func (l *WorkList) doFilterProj() (data *list.Data) {
+	data = &list.Data{}
+
+	// TODO: optimize: store in star cart list, get here
+	// list my subscribed projects
+	req := apistructs.GetSubscribeReq{Type: apistructs.ProjectSubscribe}
+	subProjs, err := l.bdl.ListSubscribes(l.identity.UserID, l.identity.OrgID, req)
+	if err != nil {
+		logrus.Errorf("list subscribes failed, identity: %+v,request: %+v, error:%v", l.identity, req, err)
+		return
+	}
+	subProjMap := make(map[uint64]bool)
+	if subProjs != nil {
+		for _, v := range subProjs.List {
+			id := v.ID
+			subProjMap[id] = true
+		}
+	}
+
+	// list my project workbench data
 	projs, err := l.wbSvc.ListQueryProjWbData(l.identity, l.filterReq.PageRequest, l.filterReq.Query)
 	if err != nil {
 		logrus.Errorf("list query projct workbench data failed, error: %v", err)
-		return &data
+		return
 	}
 
-	data = list.Data{
+	data = &list.Data{
 		Total:        uint64(projs.Total),
 		PageNo:       l.filterReq.PageNo,
 		PageSize:     l.filterReq.PageSize,
-		Title:        l.sdk.I18n(apistructs.WorkbenchItemProj.String()),
+		Title:        l.sdk.I18n(i18n.I18nKeyMyProject),
 		TitleSummary: strconv.FormatInt(int64(projs.Total), 10),
 		Operations: map[cptype.OperationKey]cptype.Operation{
 			list.OpChangePage{}.OpKey(): cputil.NewOpBuilder().Build(),
@@ -195,33 +230,39 @@ func (l *WorkList) doFilterProj() *list.Data {
 	}
 
 	for _, p := range projs.List {
+		queries, err := l.wbSvc.GetIssueQueries(p.ProjectDTO.ID)
+		if err != nil {
+			logrus.Errorf("get workbench issue queries failed, proj id: %v, error: %v", p.ProjectDTO.ID, err)
+			return
+		}
+		kvs, colums := l.GenProjKvColumnInfo(p, queries)
 		item := list.Item{
-			ID:    strconv.FormatUint(p.ProjectDTO.ID, 10),
-			Title: p.ProjectDTO.Name,
-			// TODO: url
-			LogoURL: "",
-			// TODO: star
-			Star: false,
-			TitleState: []list.StateInfo{
-				{
-					Text: l.sdk.I18n(p.ProjectDTO.Type),
-				},
-			},
+			ID:          strconv.FormatUint(p.ProjectDTO.ID, 10),
+			LogoURL:     p.ProjectDTO.Logo,
+			Title:       p.ProjectDTO.Name,
+			Star:        subProjMap[p.ProjectDTO.ID],
 			Description: p.ProjectDTO.DisplayName,
-			KvInfos:     l.GenProjKvInfo(p),
-			// TODO: operation
+			KvInfos:     kvs,
 			Operations: map[cptype.OperationKey]cptype.Operation{
+				// TODO: star operation
 				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().Build(),
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-					WithServerDataPtr(list.OpItemClickGotoServerData{}).
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: p.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjAllIssue,
+						},
+					}).
 					Build(),
 			},
 			// TODO: operation
-			MoreOperations: []list.MoreOpItem{},
+			ColumnsInfo: colums,
 		}
 		data.List = append(data.List, item)
 	}
-	return &data
+	return
 }
 
 func (l *WorkList) doFilterApp() *list.Data {
