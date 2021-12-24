@@ -44,6 +44,7 @@ components:
     type: Card
   workList:
     type: List
+    version: "2"
   workListFilter:
     type: ContractiveFilter
   messageContainer:
@@ -52,8 +53,7 @@ components:
     type: RadioTabs
   messageList:
     type: List
-
-
+    version: "2"
 
 rendering:
   __DefaultRendering__:

@@ -18,7 +18,11 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/square/go-jose.v2/json"
+
+	"github.com/erda-project/erda-infra/providers/component-protocol/components/list"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/i18n"
 )
 
 const (
@@ -37,11 +41,18 @@ const (
 
 	EventChangeEventTab = "onChange"
 
-	// KeyProjectID  operation related keys
-	KeyProjectID = "projectId"
+	// DevOpsStatus titleState status; error(red), success(green), processing(blue), warning(yellow), default(gray)
+	DevOpsStatus = "processing"
+	MspStatus    = "warning"
 
-	// TargetProjAllIssue target related keys
-	TargetProjAllIssue = "projectAllIssue"
+	MspProject    = "MSP"
+	DevOpsProject = "DevOps"
+
+	// OpKeyProjectID  operation related keys
+	OpKeyProjectID = "projectId"
+
+	// OpValTargetProjAllIssue target related keys
+	OpValTargetProjAllIssue = "projectAllIssue"
 )
 
 var (
@@ -72,4 +83,16 @@ func Transfer(a, b interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func ToProjTitleState(tp string) (list.StateInfo, bool) {
+	switch tp {
+	case MspProject:
+		return list.StateInfo{Text: i18n.I18nKeyMspProject, Status: MspStatus}, true
+	case DevOpsProject:
+		return list.StateInfo{Text: i18n.I18nKeyDevOpsProject, Status: DevOpsStatus}, true
+	default:
+		logrus.Warnf("wrong project type: %v", tp)
+		return list.StateInfo{}, false
+	}
 }
