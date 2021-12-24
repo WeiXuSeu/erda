@@ -16,6 +16,9 @@ package workCards
 
 import (
 	"fmt"
+	"strconv"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/erda-project/erda-infra/base/servicehub"
 	"github.com/erda-project/erda-infra/providers/component-protocol/components/cardlist"
@@ -24,6 +27,7 @@ import (
 	"github.com/erda-project/erda/apistructs"
 	"github.com/erda-project/erda/bundle"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
+	"github.com/erda-project/erda/modules/admin/component-protocol/types"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
@@ -37,19 +41,36 @@ type WorkCards struct {
 	wb        *workbench.Workbench
 }
 
-func (wc *WorkCards) RegisterCardListGotoOp(opData cardlist.OpCardListGoto) (opFunc cptype.OperationFunc) {
-	//TODO implement me
-	return func(sdk *cptype.SDK) {}
-}
-
-func (wc *WorkCards) RegisterCardIconGotoOp(opData cardlist.OpCardListIconGoto) (opFunc cptype.OperationFunc) {
-	//TODO implement me
-	return func(sdk *cptype.SDK) {}
-}
-
 func (wc *WorkCards) RegisterCardListStarOp(opData cardlist.OpCardListStar) (opFunc cptype.OperationFunc) {
-	//TODO implement me
-	return func(sdk *cptype.SDK) {}
+	return func(sdk *cptype.SDK) {
+		data := cardlist.Data{}
+		err := common.Transfer(opData.ClientData.DataRef, &data)
+		if err != nil {
+			return
+		}
+		tabName := wc.getTableName(sdk)
+		for _, card := range data.Cards {
+			if card.Star {
+				continue
+			}
+			id, err := strconv.ParseUint(card.ID, 10, 64)
+			if err != nil {
+				logrus.Error(err)
+				continue
+			}
+			req := apistructs.UnSubscribeReq{
+				Type:   apistructs.SubscribeType(tabName),
+				TypeID: id,
+				UserID: sdk.Identity.UserID,
+			}
+			err = wc.bdl.DeleteSubscribe(sdk.Identity.UserID, sdk.Identity.OrgID, req)
+			if err != nil {
+				logrus.Errorf("star %v %v failed, id: %v, error: %v", req.Type, req.TypeID, err)
+				return
+			}
+		}
+
+	}
 }
 
 type State struct {
@@ -58,6 +79,8 @@ type State struct {
 
 func (wc *WorkCards) RegisterInitializeOp() (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
+		wc.wb = sdk.Ctx.Value(types.WorkbenchSvc).(*workbench.Workbench)
+		wc.bdl = sdk.Ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
 		wc.LoadList(sdk)
 	}
 }
@@ -66,57 +89,379 @@ func (wc *WorkCards) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
 	return wc.RegisterInitializeOp()
 }
 
-type TextMeta struct {
-	MainText string
-	SubText  string
-	// 点击跳转
-	Operations map[string]common.Operation
-}
+func getAppTextMeta(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (metas []cardlist.TextMeta) {
+	mrData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	runtimeData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
 
-func getAppExtra(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) cptype.Extra {
-	extra := cptype.Extra{Extra: make(cptype.ExtraMap)}
-	extra.Extra["textMeta"] = []TextMeta{
-		{
-			MainText: fmt.Sprintf("%d", app.AppOpenMrNum),
-			SubText:  "MR " + sdk.I18n("Count"),
-			Operations: map[string]common.Operation{"clickGoto": common.Operation{
-				JumpOut: false,
-				Target:  "",
-				Query:   nil,
-				Params:  nil,
-			}},
-		},
-		{
-			MainText: fmt.Sprintf("%d", app.AppRuntimeNum),
-			SubText:  "Runtime " + sdk.I18n("Count"),
-			Operations: map[string]common.Operation{"clickGoto": common.Operation{
-				JumpOut: false,
-				Target:  "",
-				Query:   nil,
-				Params:  nil,
-			}},
-		},
+	mrOps := common.Operation{
+		JumpOut: false,
+		Target:  "appOpenMr",
+		Query:   map[string]interface{}{"projectId": app.ProjectID, "appId": app.ID},
+		Params:  nil,
 	}
-	return extra
-}
-
-func getProjectExtra(sdk *cptype.SDK) cptype.Extra {
-	return cptype.Extra{}
-}
-
-func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
-	tabStr := ""
-	apiIdentity := apistructs.Identity{}
-	err := common.Transfer(sdk.Identity, apiIdentity)
+	runtimeOps := common.Operation{
+		JumpOut: false,
+		Target:  "deploy",
+		Query:   map[string]interface{}{"projectId": app.ProjectID, "appId": app.ID},
+		Params:  nil,
+	}
+	err := common.Transfer(mrOps, &mrData.Extra)
 	if err != nil {
+		logrus.Error(err)
 		return
 	}
-	data := cardlist.Data{}
+	err = common.Transfer(runtimeOps, &runtimeData.Extra)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	metas = []cardlist.TextMeta{
+		{
+			MainText: float64(app.AppOpenMrNum),
+			SubText:  "MR " + sdk.I18n("Count"),
+			Operations: map[cptype.OperationKey]cptype.Operation{"clickGoto": {
+				ServerData: mrData,
+			}},
+		},
+		{
+			MainText: float64(app.AppRuntimeNum),
+			SubText:  "Runtime " + sdk.I18n("Count"),
+			Operations: map[cptype.OperationKey]cptype.Operation{"clickGoto": {
+				ServerData: runtimeData,
+			}},
+		},
+	}
+	return
+}
+func (wc *WorkCards) getProjTextMeta(sdk *cptype.SDK, project apistructs.WorkbenchProjOverviewItem) (metas []cardlist.TextMeta) {
+	todayData := cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	expireData := cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	metas = make([]cardlist.TextMeta, 0)
+	project.ProjectDTO.Type = types.ProjTypeDevops
+	switch project.ProjectDTO.Type {
+	case types.ProjTypeDevops:
+		urls, err := wc.wb.GetIssueQueries(project.ProjectDTO.ID)
+		if err != nil {
+			return
+		}
+		todayOp := common.Operation{
+			JumpOut: false,
+			Target:  "projectAllIssue",
+			Query:   map[string]interface{}{"issueFilter__urlQuery": urls.TodayExpireQuery},
+			Params:  map[string]interface{}{"projectId": project.ProjectDTO.ID},
+		}
+		expireOp := common.Operation{
+			JumpOut: false,
+			Target:  "projectAllIssue",
+			Query:   map[string]interface{}{"issueFilter__urlQuery": urls.ExpiredQuery},
+			Params:  map[string]interface{}{"projectId": project.ProjectDTO.ID},
+		}
+
+		err = common.Transfer(expireOp, &expireData.Extra)
+		if err != nil {
+			logrus.Error(err)
+			return
+		}
+		err = common.Transfer(todayOp, &todayData.Extra)
+		if err != nil {
+			logrus.Error(err)
+			return
+		}
+		if project.IssueInfo == nil {
+			project.IssueInfo = &apistructs.ProjectIssueInfo{}
+		}
+
+		metas = []cardlist.TextMeta{
+			{
+				MainText: float64(project.IssueInfo.ExpiredIssueNum),
+				SubText:  sdk.I18n("expired"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": cptype.Operation{
+						ServerData: &expireData,
+					},
+				},
+			},
+			{
+				MainText: float64(project.IssueInfo.TotalIssueNum),
+				SubText:  sdk.I18n("today expire"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": cptype.Operation{
+						ServerData: &todayData,
+					},
+				},
+			},
+		}
+		return
+	case types.ProjTypeMSP:
+		if project.IssueInfo == nil {
+			project.IssueInfo = &apistructs.ProjectIssueInfo{}
+		}
+		metas = []cardlist.TextMeta{
+			{
+				MainText: float64(project.StatisticInfo.ServiceCount),
+				SubText:  sdk.I18n("service count"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": cptype.Operation{
+						ServerData: &expireData,
+					},
+				},
+			},
+			{
+				MainText: float64(project.StatisticInfo.Last24HAlertCount),
+				SubText:  sdk.I18n("last 24 hour alarm count"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": cptype.Operation{
+						ServerData: &todayData,
+					},
+				},
+			},
+		}
+		return
+	default:
+		return
+	}
+}
+func (wc *WorkCards) getProjectCardOps(params workbench.UrlParams) (ops map[cptype.OperationKey]cptype.Operation) {
+	ops = make(map[cptype.OperationKey]cptype.Operation)
+	ops["star"] = cptype.Operation{}
+	serviceOp := common.Operation{
+		JumpOut: false,
+		Target:  "mspServiceList",
+		Params:  map[string]interface{}{},
+	}
+	err := common.Transfer(params, &serviceOp.Params)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	serverData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+
+	err = common.Transfer(serviceOp, &serverData.Extra)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	ops["clickGoto"] = cptype.Operation{ServerData: serverData}
+	return
+}
+
+func (wc *WorkCards) getAppCardOps(app apistructs.AppWorkBenchItem) (ops map[cptype.OperationKey]cptype.Operation) {
+	ops = make(map[cptype.OperationKey]cptype.Operation)
+	ops["star"] = cptype.Operation{}
+	serviceOp := common.Operation{
+		JumpOut: false,
+		Target:  "mspServiceList",
+		Params:  map[string]interface{}{"projectId": app.ProjectID, "appId": app.ID},
+	}
+	serverData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+
+	err := common.Transfer(serviceOp, &serverData.Extra)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	ops["clickGoto"] = cptype.Operation{ServerData: serverData}
+	return
+}
+func (wc *WorkCards) getAppIconOps(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (iops []cardlist.IconOperations) {
+	iops = make([]cardlist.IconOperations, 0)
+	gotoData := cardlist.OpCardListGotoData{
+		JumpOut: false,
+		Params: cptype.ExtraMap{
+			"projectId": app.ProjectID,
+			"appId":     app.ID,
+		},
+	}
+	pipelineServerData := &cptype.OpServerData{}
+	apiDesignServerData := &cptype.OpServerData{}
+	deployData := &cptype.OpServerData{}
+	repositoryServerData := &cptype.OpServerData{}
+	common.Transfer(gotoData, pipelineServerData)
+	common.Transfer(gotoData, apiDesignServerData)
+	common.Transfer(gotoData, deployData)
+	common.Transfer(gotoData, repositoryServerData)
+	pipelineServerData.Extra["target"] = "repo"
+	apiDesignServerData.Extra["target"] = "pipelineRoot"
+	deployData.Extra["target"] = "appApiDesign"
+	repositoryServerData.Extra["target"] = "deploy"
+	iops = []cardlist.IconOperations{
+		{
+			Icon: "daimacangku",
+			Tip:  sdk.I18n("code repository"),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				"clickGoto": {ServerData: repositoryServerData},
+			}},
+		{
+			Icon: "liushuixian",
+			Tip:  sdk.I18n("pipeline"),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				"clickGoto": {ServerData: pipelineServerData},
+			}},
+		{
+			Icon: "Apisheji",
+			Tip:  sdk.I18n("api design"),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				"clickGoto": {ServerData: apiDesignServerData},
+			}},
+		{
+			Icon: "bushuzhongxin-3ldgif37",
+			Tip:  sdk.I18n("deploy center"),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				"clickGoto": {ServerData: deployData},
+			}},
+	}
+	return
+}
+func (wc *WorkCards) getProjIconOps(sdk *cptype.SDK, project apistructs.WorkbenchProjOverviewItem, params workbench.UrlParams) []cardlist.IconOperations {
+
+	gotoData := cardlist.OpCardListGotoData{
+		JumpOut: false,
+		Params:  make(cptype.ExtraMap),
+	}
+	err := common.Transfer(params, &gotoData.Params)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+
+	switch project.ProjectDTO.Type {
+	case types.ProjTypeMSP:
+		serviceListServerData := &cptype.OpServerData{}
+		monitorServerData := &cptype.OpServerData{}
+		traceServerData := &cptype.OpServerData{}
+		logAnalysisServerData := &cptype.OpServerData{}
+		common.Transfer(gotoData, serviceListServerData)
+		common.Transfer(gotoData, monitorServerData)
+		common.Transfer(gotoData, traceServerData)
+		common.Transfer(gotoData, logAnalysisServerData)
+		serviceListServerData.Extra["target"] = "mspServiceList"
+		monitorServerData.Extra["target"] = "mspMonitorServiceAnalyze"
+		traceServerData.Extra["target"] = "microTrace"
+		logAnalysisServerData.Extra["target"] = "mspLogAnalyze"
+		return []cardlist.IconOperations{
+			{
+				Icon: "fuwuliebiao",
+				Tip:  sdk.I18n("service list"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {
+						ServerData: serviceListServerData,
+					},
+				},
+			},
+			{
+				Icon: "fuwujiankong",
+				Tip:  sdk.I18n("service list"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {
+						ServerData: monitorServerData,
+					},
+				},
+			},
+			{
+				Icon: "lianluzhuizong",
+				Tip:  sdk.I18n("service list"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {
+						ServerData: traceServerData,
+					},
+				},
+			},
+			{
+				Icon: "rizhifenxi",
+				Tip:  sdk.I18n("service list"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {
+						ServerData: logAnalysisServerData,
+					},
+				},
+			},
+		}
+	case types.ProjTypeDevops:
+		projectManageServerData := &cptype.OpServerData{}
+		appDevelopServerData := &cptype.OpServerData{}
+		testManageServerData := &cptype.OpServerData{}
+		serviceMonitorServerData := &cptype.OpServerData{}
+		projectSettingServerData := &cptype.OpServerData{}
+
+		common.Transfer(gotoData, projectManageServerData)
+		common.Transfer(gotoData, appDevelopServerData)
+		common.Transfer(gotoData, testManageServerData)
+		common.Transfer(gotoData, serviceMonitorServerData)
+		common.Transfer(gotoData, projectSettingServerData)
+		projectManageServerData.Extra["target"] = "projectAllIssue"
+		appDevelopServerData.Extra["target"] = "projectApps"
+		testManageServerData.Extra["target"] = "projectTestDashboard"
+		serviceMonitorServerData.Extra["target"] = "mspServiceList"
+		projectSettingServerData.Extra["target"] = "projectSetting"
+		return []cardlist.IconOperations{
+			{
+				Icon: "xiangmuguanli",
+				Tip:  sdk.I18n("project manage"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {ServerData: projectManageServerData},
+				},
+			},
+			{
+				Icon: "yingyongkaifa",
+				Tip:  sdk.I18n("app develop"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {ServerData: appDevelopServerData},
+				},
+			},
+			{
+				Icon: "ceshiguanli-3ldgif3i",
+				Tip:  sdk.I18n("test manage"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {ServerData: testManageServerData},
+				},
+			},
+			{
+				Icon: "xiangmuguanli",
+				Tip:  sdk.I18n("service monitor"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {ServerData: serviceMonitorServerData},
+				},
+			},
+			{
+				Icon: "xiangmushezhi",
+				Tip:  sdk.I18n("project setting"),
+				Operations: map[cptype.OperationKey]cptype.Operation{
+					"clickGoto": {ServerData: projectSettingServerData},
+				},
+			},
+		}
+	default:
+		return []cardlist.IconOperations{}
+	}
+}
+
+func getTitleState(sdk *cptype.SDK, kind string) []cardlist.TitleState {
+	switch kind {
+	case apistructs.WorkbenchItemApp.String():
+		return []cardlist.TitleState{{Text: sdk.I18n("default"), Status: "success"}}
+	case apistructs.WorkbenchItemProj.String():
+		return []cardlist.TitleState{{Text: sdk.I18n("default"), Status: "success"}}
+	default:
+		return []cardlist.TitleState{}
+	}
+}
+
+func (wc *WorkCards) getTableName(sdk *cptype.SDK) string {
+	tabStr := ""
 	if tab, ok := (*sdk.GlobalState)[common.WorkTabKey]; !ok {
 		tabStr = wc.State.TabName
 	} else {
 		tabStr = tab.(string)
 	}
+	return tabStr
+}
+
+func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
+	tabStr := wc.getTableName(sdk)
+	data := cardlist.Data{}
+	apiIdentity := apistructs.Identity{}
+	apiIdentity.OrgID = sdk.Identity.OrgID
+	apiIdentity.UserID = sdk.Identity.UserID
 	switch tabStr {
 	case apistructs.WorkbenchItemApp.String():
 		data.Title = sdk.I18n("star application")
@@ -125,15 +470,16 @@ func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
 			return
 		}
 		data.TitleSummary = fmt.Sprintf("%d", len(apps.List))
-		for i, app := range apps.List {
+		for _, app := range apps.List {
 			data.Cards = append(data.Cards, cardlist.Card{
-				ID:     fmt.Sprintf("%d", i),
-				ImgURL: "",
-				Icon:   "",
-				Title:  app.Name,
-				Labels: nil,
-				Star:   true,
-				Extra:  getAppExtra(sdk, app),
+				ID:             fmt.Sprintf("%d", app.ID),
+				ImgURL:         app.Logo,
+				Title:          app.Name,
+				TitleState:     getTitleState(sdk, apistructs.WorkbenchItemApp.String()),
+				Star:           true,
+				IconOperations: wc.getAppIconOps(sdk, app),
+				TextMeta:       getAppTextMeta(sdk, app),
+				Operations:     wc.getAppCardOps(app),
 			})
 		}
 	case apistructs.WorkbenchItemProj.String():
@@ -143,15 +489,24 @@ func (wc *WorkCards) LoadList(sdk *cptype.SDK) {
 			return
 		}
 		data.TitleSummary = fmt.Sprintf("%d", len(projects.List))
-		for i, _ := range projects.List {
+		ids := make([]uint64, 0)
+		for _, project := range projects.List {
+			ids = append(ids, project.ProjectDTO.ID)
+		}
+		params, err := wc.wb.GetUrlCommonParams(sdk.Identity.UserID, sdk.Identity.OrgID, ids)
+		if err != nil {
+			logrus.Errorf("card list fail to get url params ,err :%v", err)
+		}
+		for i, project := range projects.List {
 			data.Cards = append(data.Cards, cardlist.Card{
-				ID:     fmt.Sprintf("%d", i),
-				ImgURL: "",
-				Icon:   "",
-				Title:  "",
-				Labels: nil,
-				Star:   true,
-				Extra:  getProjectExtra(sdk),
+				ID:             fmt.Sprintf("%d", project.ProjectDTO.ID),
+				ImgURL:         project.ProjectDTO.Logo,
+				Title:          project.ProjectDTO.Name,
+				TitleState:     getTitleState(sdk, apistructs.WorkbenchItemApp.String()),
+				Star:           true,
+				TextMeta:       wc.getProjTextMeta(sdk, project),
+				IconOperations: wc.getProjIconOps(sdk, project, params[i]),
+				Operations:     wc.getProjectCardOps(params[i]),
 			})
 		}
 	}
