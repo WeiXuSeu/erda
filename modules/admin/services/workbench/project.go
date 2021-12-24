@@ -24,6 +24,13 @@ import (
 	"github.com/erda-project/erda/apistructs"
 )
 
+type UrlParams struct {
+	Env         string `json:"env"`
+	AddonId     string `json:"addonId"`
+	TerminusKey string `json:"terminusKey"`
+	TenantGroup string `json:"tenantGroup"`
+}
+
 func (w *Workbench) GetProjNum(identity apistructs.Identity, query string) (int, error) {
 	orgID, err := strconv.Atoi(identity.OrgID)
 	if err != nil {
@@ -192,4 +199,34 @@ func (w *Workbench) ListQueryProjWbData(identity apistructs.Identity, page apist
 		Total: projectDTO.Total,
 		List:  list,
 	}, nil
+}
+
+// GetUrlCommonParams get url params used by icon
+func (w *Workbench) GetUrlCommonParams(userID, orgID string, projectIDs []uint64) (urlParams []UrlParams, err error) {
+	urlParams = make([]UrlParams, len(projectIDs))
+	projectDTO, err := w.bdl.GetMSPTenantProjects(userID, orgID, false, projectIDs)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	for i, project := range projectDTO {
+		urlParams[i].Env = project.Relationship[len(project.Relationship)-1].Workspace
+		tenantId := project.Relationship[len(project.Relationship)-1].TenantID
+		urlParams[i].TenantGroup = tenantId
+		urlParams[i].AddonId = tenantId
+		pType := project.Type
+		menues, err := w.bdl.ListProjectsEnvAndTenantId(userID, orgID, tenantId, pType)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		urlParams[i].Env = project.Relationship[len(project.Relationship)-1].Workspace
+		if tg, ok := menues[i].Params["tenantGroup"]; ok {
+			urlParams[i].TenantGroup = tg
+		}
+		if tk, ok := menues[i].Params["terminusKey"]; ok {
+			urlParams[i].TenantGroup = tk
+		}
+	}
+	return
 }

@@ -24,8 +24,4 @@ const (
 	I18nKeyRuntimeCount         = "RuntimeCount"
 	I18nKeySearchByProjectName  = "SearchByProjectName"
 	I18nKeySearchByAppName      = "SearchByAppName"
-	I18nKeyMyProject            = "MyProject"
-	I18nKeyMyApp                = "MyApplication"
-	I18nKeyDevOpsProject        = "DevOpsProject"
-	I18nKeyMspProject           = "MspProject"
 )
