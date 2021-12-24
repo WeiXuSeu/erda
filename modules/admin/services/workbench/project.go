@@ -46,17 +46,18 @@ func (w *Workbench) GetProjNum(identity apistructs.Identity, query string) (int,
 }
 
 func (w *Workbench) ListProjWbOverviewData(identity apistructs.Identity, projects []apistructs.ProjectDTO) ([]apistructs.WorkbenchProjOverviewItem, error) {
-
+	var (
+		list    []apistructs.WorkbenchProjOverviewItem
+		pidList []uint64
+	)
 	issueMapInfo := make(map[uint64]*apistructs.WorkbenchProjectItem)
 	staMapInfo := make(map[uint64]*projpb.Project)
-	list := make([]apistructs.WorkbenchProjOverviewItem, len(projects))
 
 	orgID, err := strconv.Atoi(identity.OrgID)
 	if err != nil {
 		return nil, err
 	}
 
-	pidList := make([]uint64, len(projects))
 	for _, p := range projects {
 		pidList = append(pidList, p.ID)
 	}
@@ -129,12 +130,15 @@ func (w *Workbench) ListProjWbOverviewData(identity apistructs.Identity, project
 }
 
 func (w *Workbench) ListSubProjWbData(identity apistructs.Identity) (*apistructs.WorkbenchProjOverviewRespData, error) {
-	var projects []apistructs.ProjectDTO
+	var (
+		projects []apistructs.ProjectDTO
+		pidList  []uint64
+	)
+
 	subList, err := w.bdl.ListSubscribes(identity.UserID, identity.OrgID, apistructs.GetSubscribeReq{Type: apistructs.ProjectSubscribe})
 	if err != nil {
 		return nil, err
 	}
-	pidList := make([]uint64, len(subList.List))
 	for _, v := range subList.List {
 		pidList = append(pidList, v.TypeID)
 	}
