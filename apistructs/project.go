@@ -212,6 +212,30 @@ type PagingProjectDTO struct {
 	List  []ProjectDTO `json:"list"`
 }
 
+type GetMenuResponse struct {
+	Header
+	Data []*MenuItem `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+}
+
+type MenuItem struct {
+	ClusterName string            `json:"clusterName,omitempty"`
+	ClusterType string            `json:"clusterType,omitempty"`
+	Key         string            `json:"key,omitempty"`
+	CnName      string            `json:"cnName,omitempty"`
+	EnName      string            `json:"enName,omitempty"`
+	Href        string            `json:"href,omitempty"`
+	Params      map[string]string `json:"params,omitempty"`
+	Children    []*MenuItem       `to3" json:"children,omitempty"`
+	// 前端用于判断菜单是否显示，默认引导页为true，功能页为false，当tenant存在时进行反转
+	Exists bool `json:"exists,omitempty"`
+	// 内部字段: 强制显示
+	MustExists bool `json:"mustExists,omitempty"`
+	// 内部字段: 只在K8S集群显示
+	OnlyK8S bool ` json:"onlyK8S,omitempty"`
+	// 内部字段: 只在非K8S集群显示
+	OnlyNotK8S bool `protobuf:"varint,12,opt,name=onlyNotK8S,proto3" json:"onlyNotK8S,omitempty"`
+}
+
 // ProjectDTO 项目结构
 type ProjectDTO struct {
 	ID          uint64 `json:"id"`

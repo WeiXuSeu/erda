@@ -214,6 +214,27 @@ func (b *Bundle) ListPublicProject(userID string, req apistructs.ProjectListRequ
 	return &rsp.Data, nil
 }
 
+func (b *Bundle) ListProjectsEnvAndTenantId(userID, orgID, tenantId, Type string) ([]*apistructs.MenuItem, error) {
+	host, err := b.urls.MSP()
+	if err != nil {
+		return nil, err
+	}
+	hc := b.hc
+
+	var rsp = apistructs.GetMenuResponse{}
+	resp, err := hc.Get(host).Path(fmt.Sprintf("/api/msp/tenant/menu")).
+		Header("User-ID", userID).
+		Header("Org-ID", orgID).
+		Do().JSON(&rsp)
+	if err != nil {
+		return nil, apierrors.ErrInvoke.InternalError(err)
+	}
+	if !resp.IsOK() || !rsp.Success {
+		return nil, toAPIError(resp.StatusCode(), rsp.Error)
+	}
+	return rsp.Data, err
+}
+
 // UpdateProjectActiveTime 更新项目活跃时间
 func (b *Bundle) UpdateProjectActiveTime(req apistructs.ProjectActiveTimeUpdateRequest) error {
 	host, err := b.urls.CoreServices()
