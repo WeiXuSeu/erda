@@ -69,6 +69,9 @@ func (l *WorkList) BeforeHandleOp(sdk *cptype.SDK) {
 	l.bdl = sdk.Ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
 	l.wbSvc = sdk.Ctx.Value(types.WorkbenchSvc).(*workbench.Workbench)
 
+	// set component version
+	l.sdk.Comp.Version = "2"
+
 	// get identity info
 	l.identity = apistructs.Identity{
 		UserID: sdk.Identity.UserID,
@@ -163,7 +166,7 @@ func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.Ope
 				logrus.Errorf("unstar failed, id: %v, error: %v", req.TypeID, err)
 				return
 			}
-			opData.ClientData.DataRef.Star = true
+			opData.ClientData.DataRef.Star = false
 		}
 
 	}
@@ -171,13 +174,11 @@ func (l *WorkList) RegisterItemStarOp(opData list.OpItemStar) (opFunc cptype.Ope
 
 func (l *WorkList) RegisterItemClickGotoOp(opData list.OpItemClickGoto) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
-
 	}
 }
 
 func (l *WorkList) RegisterItemClickOp(opData list.OpItemClick) (opFunc cptype.OperationFunc) {
 	return func(sdk *cptype.SDK) {
-
 	}
 }
 
@@ -195,7 +196,7 @@ func (l *WorkList) doFilter() *list.Data {
 func (l *WorkList) doFilterProj() (data *list.Data) {
 	data = &list.Data{}
 
-	// TODO: optimize: store in star cart list, get here
+	// TODO: optimize: store stared item global state from star cart list, get here
 	// list my subscribed projects
 	req := apistructs.GetSubscribeReq{Type: apistructs.ProjectSubscribe}
 	subProjs, err := l.bdl.ListSubscribes(l.identity.UserID, l.identity.OrgID, req)
@@ -219,9 +220,9 @@ func (l *WorkList) doFilterProj() (data *list.Data) {
 	}
 
 	data = &list.Data{
-		Total:        uint64(projs.Total),
 		PageNo:       l.filterReq.PageNo,
 		PageSize:     l.filterReq.PageSize,
+		Total:        uint64(projs.Total),
 		Title:        l.sdk.I18n(i18n.I18nKeyMyProject),
 		TitleSummary: strconv.FormatInt(int64(projs.Total), 10),
 		Operations: map[cptype.OperationKey]cptype.Operation{
@@ -229,23 +230,45 @@ func (l *WorkList) doFilterProj() (data *list.Data) {
 		},
 	}
 
+	// get msp url params
+	var projIDs []uint64
+	for _, v := range projs.List {
+		projIDs = append(projIDs, v.ProjectDTO.ID)
+	}
+	mspParams, err := l.wbSvc.GetUrlCommonParams(l.identity.UserID, l.identity.OrgID, projIDs)
+	if err != nil {
+		logrus.Errorf("get msp common params failed, error: %v", err)
+		return
+	}
+	params := make(map[string]interface{})
+	err = common.Transfer(mspParams, &params)
+	if err != nil {
+		logrus.Errorf("transfer msp params failed, msp params: %+v, error: %v", mspParams, err)
+		return
+	}
+
 	for _, p := range projs.List {
+		// get click goto issue query url
 		queries, err := l.wbSvc.GetIssueQueries(p.ProjectDTO.ID)
 		if err != nil {
 			logrus.Errorf("get workbench issue queries failed, proj id: %v, error: %v", p.ProjectDTO.ID, err)
 			return
 		}
-		kvs, colums := l.GenProjKvColumnInfo(p, queries)
+		kvs, columns := l.GenProjKvColumnInfo(p, queries, params)
+		star := subProjMap[p.ProjectDTO.ID]
+		starTip := l.sdk.I18n(i18n.GenStarTip(apistructs.WorkbenchItemProj, star))
+		ts, _ := i18n.GenProjTitleState(p.ProjectDTO.Type)
 		item := list.Item{
 			ID:          strconv.FormatUint(p.ProjectDTO.ID, 10),
 			LogoURL:     p.ProjectDTO.Logo,
 			Title:       p.ProjectDTO.Name,
-			Star:        subProjMap[p.ProjectDTO.ID],
-			Description: p.ProjectDTO.DisplayName,
+			TitleState:  ts,
+			Star:        star,
+			Description: p.ProjectDTO.Desc,
 			KvInfos:     kvs,
+			ColumnsInfo: columns,
 			Operations: map[cptype.OperationKey]cptype.Operation{
-				// TODO: star operation
-				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().Build(),
+				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().WithTip(starTip).Build(),
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
@@ -257,35 +280,49 @@ func (l *WorkList) doFilterProj() (data *list.Data) {
 					}).
 					Build(),
 			},
-			// TODO: operation
-			ColumnsInfo: colums,
 		}
 		data.List = append(data.List, item)
 	}
 	return
 }
 
-func (l *WorkList) doFilterApp() *list.Data {
-	var data list.Data
+func (l *WorkList) doFilterApp() (data *list.Data) {
+	data = &list.Data{}
 
-	req := apistructs.ApplicationListRequest{
+	// list my subscribed apps
+	sr := apistructs.GetSubscribeReq{Type: apistructs.AppSubscribe}
+	subs, err := l.bdl.ListSubscribes(l.identity.UserID, l.identity.OrgID, sr)
+	if err != nil {
+		logrus.Errorf("list subscribes failed, identity: %+v,request: %+v, error:%v", l.identity, sr, err)
+		return
+	}
+	subMap := make(map[uint64]bool)
+	if subs != nil {
+		for _, v := range subs.List {
+			id := v.ID
+			subMap[id] = true
+		}
+	}
+
+	// list app workbench data
+	lr := apistructs.ApplicationListRequest{
 		Query:    l.filterReq.Query,
 		PageSize: int(l.filterReq.PageSize),
 		PageNo:   int(l.filterReq.PageNo),
 	}
 
 	// TODO: set custom mr query rate
-	apps, err := l.wbSvc.ListAppWbData(l.identity, req, 0)
+	apps, err := l.wbSvc.ListAppWbData(l.identity, lr, 0)
 	if err != nil {
 		logrus.Errorf("list query app workbench data failed, error: %v", err)
-		return &data
+		return
 	}
 
-	data = list.Data{
+	data = &list.Data{
 		Total:        uint64(apps.TotalApps),
 		PageNo:       l.filterReq.PageNo,
 		PageSize:     l.filterReq.PageSize,
-		Title:        l.sdk.I18n(apistructs.WorkbenchItemApp.String()),
+		Title:        l.sdk.I18n(i18n.I18nKeyMyApp),
 		TitleSummary: strconv.FormatInt(int64(apps.TotalApps), 10),
 		Operations: map[cptype.OperationKey]cptype.Operation{
 			list.OpChangePage{}.OpKey(): cputil.NewOpBuilder().Build(),
@@ -293,26 +330,34 @@ func (l *WorkList) doFilterApp() *list.Data {
 	}
 
 	for _, p := range apps.List {
+		star := subMap[p.ID]
+		starTip := l.sdk.I18n(i18n.GenStarTip(apistructs.WorkbenchItemProj, star))
+		ts, _ := i18n.GenProjTitleState(p.Mode)
 		item := list.Item{
-			ID:    strconv.FormatUint(p.ID, 10),
-			Title: p.Name,
-			// TODO: url
-			LogoURL: "",
-			// TODO: star
-			Star: false,
-			TitleState: []list.StateInfo{
-				{
-					Text: l.sdk.I18n(p.Mode),
-				},
-			},
+			ID:          strconv.FormatUint(p.ID, 10),
+			LogoURL:     p.Logo,
+			Title:       p.Name,
+			TitleState:  ts,
+			Star:        star,
 			Description: p.Desc,
 			KvInfos:     l.GenAppKvInfo(p),
-			// TODO: operation
-			Operations: map[cptype.OperationKey]cptype.Operation{},
-			// TODO: operation
-			MoreOperations: []list.MoreOpItem{},
+			ColumnsInfo: l.GenAppColumnInfo(p),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().WithTip(starTip).Build(),
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: p.ProjectID,
+								common.OpkeyAppID:     p.ID,
+							},
+							Target: common.OpValTargetRepo,
+						},
+					}).
+					Build(),
+			},
 		}
 		data.List = append(data.List, item)
 	}
-	return &data
+	return
 }

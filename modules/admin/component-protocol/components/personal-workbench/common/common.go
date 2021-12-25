@@ -37,20 +37,52 @@ const (
 
 	EventChangeEventTab = "onChange"
 
-	// DevOpsStatus titleState status; error(red), success(green), processing(blue), warning(yellow), default(gray)
-	DevOpsStatus = "processing"
-	MspStatus    = "warning"
+	// ProjDevOpsStatus titleState status; error(red), success(green), processing(blue), warning(yellow), default(gray)
+	ProjDevOpsStatus = "processing"
+	ProjMspStatus    = "warning"
+	AppLibraryStatus = "success"
+	AppBigdataStatus = "processing"
+	AppServiceStatus = "warning"
 
 	MspProject    = "MSP"
 	DevOpsProject = "DevOps"
 
 	// OpKeyProjectID  operation related keys
 	OpKeyProjectID           = "projectId"
+	OpkeyAppID               = "appId"
 	OpKeyIssueFilterUrlQuery = "issueFilter__urlQuery"
 
 	// OpValTargetProjAllIssue target related keys
-	OpValTargetProjAllIssue = "projectAllIssue"
-	OpValTargetProjApps     = "projectApps"
+	OpValTargetProjAllIssue             = "projectAllIssue"
+	OpValTargetProjApps                 = "projectApps"
+	OpValTargetMspServiceList           = "mspServiceList"
+	OpValTargetMspMonitorServiceAnalyze = "mspMonitorServiceAnalyze"
+	OpValTargetMicroTrace               = "microTrace"
+	OpValTargetMspLogAnalyze            = "mspLogAnalyze"
+	OpValTargetMicroServiceAlarmRecord  = "microServiceAlarmRecord"
+	OpValTargetProjectTestDashboard     = "projectTestDashboard"
+	OpValTargetProjectSetting           = "projectSetting"
+	OpValTargetProject                  = "project"
+	OpValTargetAppOpenMr                = "appOpenMr"
+	OpValTargetAppDeploy                = "deploy"
+	OpValTargetRepo                     = "repo"
+	OpValTargetPipelineRoot             = "pipelineRoot"
+	OpValTargetAppApiDesign             = "Apisheji"
+
+	// IconProjManagement icon value
+	IconProjManagement     = "xiangmuguanli"
+	IconAppDevelop         = "yingyongkaifa"
+	IconTestManagement     = "ceshiguanli"
+	IconServiceMonitor     = "fuwujiankong"
+	IconProjSetting        = "projectSetting"
+	IconServiceList        = "fuwuliebiao"
+	IconServiceObservation = "fuwuguance"
+	IconServiceTracing     = "lianluzhuizong"
+	IconLogAnalysis        = "rizhifenxi"
+	IconRepo               = "daimacangku"
+	IconPipeline           = "liushuixian"
+	IconAppApiDesign       = "appApiDesign"
+	IconAppDeployCenter    = "bushuzhongxin"
 )
 
 var (
