@@ -18,25 +18,157 @@ import (
 	"strconv"
 
 	"github.com/erda-project/erda-infra/providers/component-protocol/components/list"
+	"github.com/erda-project/erda-infra/providers/component-protocol/cptype"
+	"github.com/erda-project/erda-infra/providers/component-protocol/utils/cputil"
 	"github.com/erda-project/erda/apistructs"
+	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/i18n"
 )
 
 // GenAppKvInfo show: mr num, runtime num
 func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvInfo) {
 	kvs = []list.KvInfo{
+		// project belong
+		{
+			ID:    strconv.FormatUint(app.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyProject),
+			Value: app.ProjectName,
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+							},
+							Target: common.OpValTargetProject,
+						},
+					}).
+					Build(),
+			},
+		},
 		// mr count
 		{
 			ID:    strconv.FormatUint(app.ID, 10),
 			Key:   l.sdk.I18n(i18n.I18nKeyMrCount),
 			Value: strconv.FormatInt(int64(app.AppOpenMrNum), 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetAppOpenMr,
+						},
+					}).
+					Build(),
+			},
 		},
 		// service count
 		{
 			ID:    strconv.FormatUint(app.ID, 10),
 			Key:   l.sdk.I18n(i18n.I18nKeyRuntimeCount),
 			Value: strconv.FormatInt(int64(app.AppOpenMrNum), 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetAppDeploy,
+						},
+					}).
+					Build(),
+			},
 		},
 	}
+	return
+}
+
+func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns map[string]interface{}) {
+	var hovers []list.KvInfo
+	columns = make(map[string]interface{})
+	hovers = []list.KvInfo{
+		// 代码仓库
+		{
+			ID:   strconv.FormatUint(app.ID, 10),
+			Icon: common.IconRepo,
+			Tip:  l.sdk.I18n(i18n.I18nKeyGitRepo),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetRepo,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 流水线
+		{
+			ID:   strconv.FormatUint(app.ID, 10),
+			Icon: common.IconPipeline,
+			Tip:  l.sdk.I18n(i18n.I18nKeyPipeline),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetPipelineRoot,
+						},
+					}).
+					Build(),
+			},
+		},
+		// API设计
+		{
+			ID:   strconv.FormatUint(app.ID, 10),
+			Icon: common.IconAppApiDesign,
+			Tip:  l.sdk.I18n(i18n.I18nKeyAppApiDesign),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetAppApiDesign,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 部署中心
+		{
+			ID:   strconv.FormatUint(app.ID, 10),
+			Icon: common.IconAppDeployCenter,
+			Tip:  l.sdk.I18n(i18n.I18nKeyAppDeployCenter),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: app.ProjectID,
+								common.OpkeyAppID:     app.ID,
+							},
+							Target: common.OpValTargetAppDeploy,
+						},
+					}).
+					Build(),
+			},
+		},
+	}
+	columns["hoverIcons"] = hovers
 	return
 }

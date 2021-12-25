@@ -28,151 +28,319 @@ import (
 )
 
 // GenProjKvColumnInfo show type: DevOps, MSP, DevOps(primary)/MSP
-// TODO: operations
-func (l *WorkList) GenProjKvColumnInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries) (kvs []list.KvInfo, columns map[string]interface{}) {
-	var hovers []list.KvInfo
-	columns = make(map[string]interface{})
-
+func (l *WorkList) GenProjKvColumnInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries, mspParams map[string]interface{}) (kvs []list.KvInfo, columns map[string]interface{}) {
 	switch proj.ProjectDTO.Type {
 	case types.ProjTypeDevops:
 		// kv issue info
-		if proj.IssueInfo == nil {
-			proj.IssueInfo = &apistructs.ProjectIssueInfo{}
-		}
-		kvs = []list.KvInfo{
-			// issue expired
-			{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyIssueExpired),
-				Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredIssueNum), 10),
-				Operations: map[cptype.OperationKey]cptype.Operation{
-					list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-						WithServerDataPtr(list.OpItemClickGotoServerData{
-							OpItemBasicServerData: list.OpItemBasicServerData{
-								Query: map[string]interface{}{
-									common.OpKeyIssueFilterUrlQuery: q.ExpiredQuery,
-								},
-								Params: map[string]interface{}{
-									common.OpKeyProjectID: proj.ProjectDTO.ID,
-								},
-								Target: common.OpValTargetProjAllIssue,
-							},
-						}).
-						Build(),
-				},
-			},
-			// issue will expire today
-			{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyIssueExpiredToday),
-				Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredOneDayNum), 10),
-				Operations: map[cptype.OperationKey]cptype.Operation{
-					list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-						WithServerDataPtr(list.OpItemClickGotoServerData{
-							OpItemBasicServerData: list.OpItemBasicServerData{
-								Query: map[string]interface{}{
-									common.OpKeyIssueFilterUrlQuery: q.TodayExpireQuery,
-								},
-								Params: map[string]interface{}{
-									common.OpKeyProjectID: proj.ProjectDTO.ID,
-								},
-								Target: common.OpValTargetProjAllIssue,
-							},
-						}).
-						Build(),
-				},
-			},
-			// issue undo
-			{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyIssueUndo),
-				Value: strconv.FormatInt(int64(proj.IssueInfo.TotalIssueNum), 10),
-				Operations: map[cptype.OperationKey]cptype.Operation{
-					list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-						WithServerDataPtr(list.OpItemClickGotoServerData{
-							OpItemBasicServerData: list.OpItemBasicServerData{
-								Query: map[string]interface{}{
-									common.OpKeyIssueFilterUrlQuery: q.UndoQuery,
-								},
-								Params: map[string]interface{}{
-									common.OpKeyProjectID: proj.ProjectDTO.ID,
-								},
-								Target: common.OpValTargetProjAllIssue,
-							},
-						}).
-						Build(),
-				},
-			},
-		}
-		if proj.StatisticInfo != nil {
-			// msp alert info
-			altKv := list.KvInfo{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyMspLast24HAlertCount),
-				Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
-			}
-			kvs = append(kvs, altKv)
-		}
-
-		// hover info
-		hovers = []list.KvInfo{
-			// 项目管理
-			{
-				ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Icon: "xiangmuguanli",
-				Tip:  "项目管理",
-				Operations: map[cptype.OperationKey]cptype.Operation{
-					list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-						WithServerDataPtr(list.OpItemClickGotoServerData{
-							OpItemBasicServerData: list.OpItemBasicServerData{
-								Params: map[string]interface{}{
-									common.OpKeyProjectID: proj.ProjectDTO.ID,
-								},
-								Target: common.OpValTargetProjAllIssue,
-							},
-						}).
-						Build(),
-				},
-			},
-			// 应用开发
-			{
-				ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Icon: "yingyongkaifa",
-				Tip:  "应用开发",
-				Operations: map[cptype.OperationKey]cptype.Operation{
-					list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
-						WithServerDataPtr(list.OpItemClickGotoServerData{
-							OpItemBasicServerData: list.OpItemBasicServerData{
-								Params: map[string]interface{}{
-									common.OpKeyProjectID: proj.ProjectDTO.ID,
-								},
-								Target: common.OpValTargetProjApps,
-							},
-						}).
-						Build(),
-				},
-			},
-		}
-		columns["hoverIcons"] = hovers
+		kvs = l.GenProjDopKvInfo(proj, q, mspParams)
+		columns = l.GenProjDopColumnInfo(proj, q, mspParams)
 
 	case types.ProjTypeMSP:
-		if proj.StatisticInfo == nil {
-			return
-		}
-		kvs = []list.KvInfo{
-			// msp service info
-			{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyMspServiceCount),
-				Value: strconv.FormatInt(proj.StatisticInfo.ServiceCount, 10),
-			},
-			// msp alert info
-			{
-				ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
-				Key:   l.sdk.I18n(i18n.I18nKeyMspLast24HAlertCount),
-				Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
-			},
-		}
+		kvs = l.GenProjMspKvInfo(proj, q, mspParams)
+		columns = l.GenProjMspColumnInfo(proj, q, mspParams)
 	}
+	return
+}
+
+func (l *WorkList) GenProjDopKvInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries, mspParams map[string]interface{}) (kvs []list.KvInfo) {
+	// kv issue info
+	if proj.IssueInfo == nil {
+		proj.IssueInfo = &apistructs.ProjectIssueInfo{}
+	}
+	kvs = []list.KvInfo{
+		// issue expired
+		{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyIssueExpired),
+			Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredIssueNum), 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Query: map[string]interface{}{
+								common.OpKeyIssueFilterUrlQuery: q.ExpiredQuery,
+							},
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjAllIssue,
+						},
+					}).
+					Build(),
+			},
+		},
+		// issue will expire today
+		{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyIssueExpiredToday),
+			Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredOneDayNum), 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Query: map[string]interface{}{
+								common.OpKeyIssueFilterUrlQuery: q.TodayExpireQuery,
+							},
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjAllIssue,
+						},
+					}).
+					Build(),
+			},
+		},
+		// issue undo
+		{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyIssueUndo),
+			Value: strconv.FormatInt(int64(proj.IssueInfo.TotalIssueNum), 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Query: map[string]interface{}{
+								common.OpKeyIssueFilterUrlQuery: q.UndoQuery,
+							},
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjAllIssue,
+						},
+					}).
+					Build(),
+			},
+		},
+	}
+	if proj.StatisticInfo != nil {
+		// msp alert info
+		altKv := list.KvInfo{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyMspLast24HAlertCount),
+			Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMicroServiceAlarmRecord,
+						},
+					}).
+					Build(),
+			},
+		}
+		kvs = append(kvs, altKv)
+	}
+	return
+}
+
+func (l *WorkList) GenProjMspKvInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries, mspParams map[string]interface{}) (kvs []list.KvInfo) {
+	if proj.StatisticInfo == nil {
+		return
+	}
+	kvs = []list.KvInfo{
+		// msp service info
+		{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyMspServiceCount),
+			Value: strconv.FormatInt(proj.StatisticInfo.ServiceCount, 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMspServiceList,
+						},
+					}).
+					Build(),
+			},
+		},
+		// msp alert info
+		{
+			ID:    strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Key:   l.sdk.I18n(i18n.I18nKeyMspLast24HAlertCount),
+			Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMicroServiceAlarmRecord,
+						},
+					}).
+					Build(),
+			},
+		},
+	}
+	return
+}
+
+func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries, mspParams map[string]interface{}) (columns map[string]interface{}) {
+	var hovers []list.KvInfo
+	columns = make(map[string]interface{})
+	hovers = []list.KvInfo{
+		// 项目管理
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconProjManagement,
+			Tip:  l.sdk.I18n(i18n.I18nKeyProjManagement),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjAllIssue,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 应用开发
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconAppDevelop,
+			Tip:  l.sdk.I18n(i18n.I18nKeyAppDevelop),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjApps,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 测试管理
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconTestManagement,
+			Tip:  l.sdk.I18n(i18n.I18nKeyTestManagement),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjectTestDashboard,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 服务观测
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconServiceObservation,
+			Tip:  l.sdk.I18n(i18n.I18nKeyServiceObservation),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMspServiceList,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 项目设置
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconProjSetting,
+			Tip:  l.sdk.I18n(i18n.I18nKeyProjSetting),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: map[string]interface{}{
+								common.OpKeyProjectID: proj.ProjectDTO.ID,
+							},
+							Target: common.OpValTargetProjectSetting,
+						},
+					}).
+					Build(),
+			},
+		},
+	}
+	columns["hoverIcons"] = hovers
+	return
+}
+
+func (l *WorkList) GenProjMspColumnInfo(proj apistructs.WorkbenchProjOverviewItem, q wb.IssueUrlQueries, mspParams map[string]interface{}) (columns map[string]interface{}) {
+	var hovers []list.KvInfo
+	columns = make(map[string]interface{})
+	hovers = []list.KvInfo{
+		// 服务列表
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconServiceList,
+			Tip:  l.sdk.I18n(i18n.I18nKeyServiceList),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMspServiceList,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 服务监控
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconServiceMonitor,
+			Tip:  l.sdk.I18n(i18n.I18nKeyServiceMonitor),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMspMonitorServiceAnalyze,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 链路追踪
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconServiceTracing,
+			Tip:  l.sdk.I18n(i18n.I18nKeyServiceTracing),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMicroTrace,
+						},
+					}).
+					Build(),
+			},
+		},
+		// 日志分析
+		{
+			ID:   strconv.FormatUint(proj.ProjectDTO.ID, 10),
+			Icon: common.IconLogAnalysis,
+			Tip:  l.sdk.I18n(i18n.I18nKeyLogAnalysis),
+			Operations: map[cptype.OperationKey]cptype.Operation{
+				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithServerDataPtr(list.OpItemClickGotoServerData{
+						OpItemBasicServerData: list.OpItemBasicServerData{
+							Params: mspParams,
+							Target: common.OpValTargetMspLogAnalyze,
+						},
+					}).
+					Build(),
+			},
+		},
+	}
+	columns["hoverIcons"] = hovers
 	return
 }
