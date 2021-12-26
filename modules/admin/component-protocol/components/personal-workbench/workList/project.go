@@ -55,6 +55,7 @@ func (l *WorkList) GenProjDopKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredIssueNum), 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Query: map[string]interface{}{
@@ -76,6 +77,7 @@ func (l *WorkList) GenProjDopKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(int64(proj.IssueInfo.ExpiredOneDayNum), 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Query: map[string]interface{}{
@@ -97,6 +99,7 @@ func (l *WorkList) GenProjDopKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(int64(proj.IssueInfo.TotalIssueNum), 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Query: map[string]interface{}{
@@ -120,6 +123,7 @@ func (l *WorkList) GenProjDopKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -146,6 +150,7 @@ func (l *WorkList) GenProjMspKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(proj.StatisticInfo.ServiceCount, 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -162,6 +167,7 @@ func (l *WorkList) GenProjMspKvInfo(proj apistructs.WorkbenchProjOverviewItem, q
 			Value: strconv.FormatInt(proj.StatisticInfo.Last24HAlertCount, 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -186,6 +192,7 @@ func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyProjManagement),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -204,6 +211,7 @@ func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyAppDevelop),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -222,6 +230,7 @@ func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyTestManagement),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -240,6 +249,7 @@ func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyServiceObservation),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -256,6 +266,7 @@ func (l *WorkList) GenProjDopColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyProjSetting),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -283,6 +294,7 @@ func (l *WorkList) GenProjMspColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyServiceList),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -299,6 +311,7 @@ func (l *WorkList) GenProjMspColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyServiceMonitor),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -315,6 +328,7 @@ func (l *WorkList) GenProjMspColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyServiceTracing),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
@@ -331,6 +345,7 @@ func (l *WorkList) GenProjMspColumnInfo(proj apistructs.WorkbenchProjOverviewIte
 			Tip:  l.sdk.I18n(i18n.I18nKeyLogAnalysis),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: mspParams,
