@@ -270,6 +270,7 @@ func (l *WorkList) doFilterProj() (data *list.Data) {
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().WithTip(starTip).Build(),
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -345,6 +346,7 @@ func (l *WorkList) doFilterApp() (data *list.Data) {
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemStar{}.OpKey(): cputil.NewOpBuilder().WithTip(starTip).Build(),
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{

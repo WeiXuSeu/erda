@@ -35,6 +35,7 @@ func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvI
 			Value: app.ProjectName,
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -53,6 +54,7 @@ func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvI
 			Value: strconv.FormatInt(int64(app.AppOpenMrNum), 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -72,6 +74,7 @@ func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvI
 			Value: strconv.FormatInt(int64(app.AppOpenMrNum), 10),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -99,6 +102,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 			Tip:  l.sdk.I18n(i18n.I18nKeyGitRepo),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -118,6 +122,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 			Tip:  l.sdk.I18n(i18n.I18nKeyPipeline),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -137,6 +142,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 			Tip:  l.sdk.I18n(i18n.I18nKeyAppApiDesign),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
@@ -156,6 +162,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 			Tip:  l.sdk.I18n(i18n.I18nKeyAppDeployCenter),
 			Operations: map[cptype.OperationKey]cptype.Operation{
 				list.OpItemClickGoto{}.OpKey(): cputil.NewOpBuilder().
+					WithSkipRender(true).
 					WithServerDataPtr(list.OpItemClickGotoServerData{
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
