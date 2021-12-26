@@ -28,6 +28,7 @@ const (
 	FilterNameKey = "FilterName"
 	// WorkTabKey work tab switch, e.g: project, app
 	WorkTabKey = "workTabKey"
+	MsgTabKey  = "messageTabKey"
 
 	// TabData load data from tabs transfer with global state.
 	TabData = "tabData"
@@ -43,13 +44,14 @@ const (
 	AppLibraryStatus = "success"
 	AppBigdataStatus = "processing"
 	AppServiceStatus = "warning"
+	UnreadMsgStatus  = "error"
 
 	MspProject    = "MSP"
 	DevOpsProject = "DevOps"
 
 	// OpKeyProjectID  operation related keys
 	OpKeyProjectID           = "projectId"
-	OpkeyAppID               = "appId"
+	OpKeyAppID               = "appId"
 	OpKeyIssueFilterUrlQuery = "issueFilter__urlQuery"
 
 	// OpValTargetProjAllIssue target related keys

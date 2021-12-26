@@ -57,7 +57,7 @@ func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvI
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetAppOpenMr,
 						},
@@ -76,7 +76,7 @@ func (l *WorkList) GenAppKvInfo(app apistructs.AppWorkBenchItem) (kvs []list.KvI
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetAppDeploy,
 						},
@@ -103,7 +103,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetRepo,
 						},
@@ -122,7 +122,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetPipelineRoot,
 						},
@@ -141,7 +141,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetAppApiDesign,
 						},
@@ -160,7 +160,7 @@ func (l *WorkList) GenAppColumnInfo(app apistructs.AppWorkBenchItem) (columns ma
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: app.ProjectID,
-								common.OpkeyAppID:     app.ID,
+								common.OpKeyAppID:     app.ID,
 							},
 							Target: common.OpValTargetAppDeploy,
 						},

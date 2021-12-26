@@ -68,3 +68,23 @@ func (h *GSHelper) GetFilterName() (string, bool) {
 	cputil.MustObjJSONTransfer(v, &name)
 	return name, true
 }
+
+func (h *GSHelper) SetMsgTabName(name string) {
+	if h.gs == nil {
+		return
+	}
+	(*h.gs)[common.MsgTabKey] = name
+}
+
+func (h *GSHelper) GetMsgTabName() (apistructs.WorkbenchItemType, bool) {
+	if h.gs == nil {
+		return "", false
+	}
+	v, ok := (*h.gs)[common.MsgTabKey]
+	if !ok {
+		return "", false
+	}
+	var name apistructs.WorkbenchItemType
+	cputil.MustObjJSONTransfer(v, &name)
+	return name, true
+}

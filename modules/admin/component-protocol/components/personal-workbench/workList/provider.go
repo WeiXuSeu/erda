@@ -349,7 +349,7 @@ func (l *WorkList) doFilterApp() (data *list.Data) {
 						OpItemBasicServerData: list.OpItemBasicServerData{
 							Params: map[string]interface{}{
 								common.OpKeyProjectID: p.ProjectID,
-								common.OpkeyAppID:     p.ID,
+								common.OpKeyAppID:     p.ID,
 							},
 							Target: common.OpValTargetRepo,
 						},
