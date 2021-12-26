@@ -43,7 +43,7 @@ type Data struct {
 }
 
 type Operation struct {
-	ClientData
+	ClientData ClientData `json:"clientData"`
 }
 
 type ClientData struct {
@@ -171,7 +171,7 @@ func (wt *WorkTabs) Render(ctx context.Context, c *cptype.Component, scenario cp
 		if err != nil {
 			return err
 		}
-		wt.State.Value = wt.Operations[common.EventChangeEventTab].Value
+		wt.State.Value = wt.Operations[common.EventChangeEventTab].ClientData.Value
 	default:
 		logrus.Errorf("scenario %v component WorkTabs does not support event %v", scenario, event)
 		return nil
