@@ -29,6 +29,7 @@ import (
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/common/gshelper"
 	"github.com/erda-project/erda/modules/admin/component-protocol/components/personal-workbench/i18n"
+	"github.com/erda-project/erda/modules/admin/component-protocol/types"
 	"github.com/erda-project/erda/modules/openapi/component-protocol/components/base"
 )
 
@@ -69,12 +70,6 @@ type State struct {
 	Value string `json:"value"`
 }
 
-func init() {
-	base.InitProviderWithCreator(common.ScenarioKey, "workListFilter",
-		func() servicehub.Provider { return &MessageTabs{} },
-	)
-}
-
 func (f *MessageTabs) InitFromProtocol(ctx context.Context, c *cptype.Component, gs *cptype.GlobalStateData) error {
 	// component 序列化
 	b, err := json.Marshal(c)
@@ -87,6 +82,7 @@ func (f *MessageTabs) InitFromProtocol(ctx context.Context, c *cptype.Component,
 
 	// sdk
 	f.sdk = cputil.SDK(ctx)
+	f.bdl = ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
 	f.identity = apistructs.Identity{
 		UserID: f.sdk.Identity.UserID,
 		OrgID:  f.sdk.Identity.OrgID,

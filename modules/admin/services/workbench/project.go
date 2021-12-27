@@ -206,18 +206,22 @@ func (w *Workbench) GetUrlCommonParams(userID, orgID string, projectIDs []uint64
 	urlParams = make([]UrlParams, len(projectIDs))
 	projectDTO, err := w.bdl.GetMSPTenantProjects(userID, orgID, false, projectIDs)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Errorf("failed to get msp tenant project , err: %v", err)
 		return
 	}
 	for i, project := range projectDTO {
+		var menues []*apistructs.MenuItem
 		urlParams[i].Env = project.Relationship[len(project.Relationship)-1].Workspace
 		tenantId := project.Relationship[len(project.Relationship)-1].TenantID
 		urlParams[i].TenantGroup = tenantId
 		urlParams[i].AddonId = tenantId
 		pType := project.Type
-		menues, err := w.bdl.ListProjectsEnvAndTenantId(userID, orgID, tenantId, pType)
+		if pType == "DOP" {
+			continue
+		}
+		menues, err = w.bdl.ListProjectsEnvAndTenantId(userID, orgID, tenantId, pType)
 		if err != nil {
-			logrus.Error(err)
+			logrus.Errorf("failed to get env and tenant id ,err: %v", err)
 			continue
 		}
 		urlParams[i].Env = project.Relationship[len(project.Relationship)-1].Workspace
