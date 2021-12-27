@@ -768,6 +768,7 @@ func (e *Endpoints) GetModelProjectsMap(ctx context.Context, r *http.Request, va
 			ID:          uint64(v.ID),
 			DisplayName: v.DisplayName,
 			Logo:        v.Logo,
+			Type:        v.Type,
 		}
 	}
 
