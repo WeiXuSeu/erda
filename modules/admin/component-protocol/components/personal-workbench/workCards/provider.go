@@ -90,8 +90,8 @@ func (wc *WorkCards) RegisterRenderingOp() (opFunc cptype.OperationFunc) {
 }
 
 func getAppTextMeta(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (metas []cardlist.TextMeta) {
-	mrData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
-	runtimeData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	mrData := make(cptype.OpServerData)
+	runtimeData := make(cptype.OpServerData)
 
 	mrOps := common.Operation{
 		JumpOut: false,
@@ -105,12 +105,12 @@ func getAppTextMeta(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (metas []c
 		Query:   map[string]interface{}{"projectId": app.ProjectID, "appId": app.ID},
 		Params:  nil,
 	}
-	err := common.Transfer(mrOps, &mrData.Extra)
+	err := common.Transfer(mrOps, &mrData)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	err = common.Transfer(runtimeOps, &runtimeData.Extra)
+	err = common.Transfer(runtimeOps, &runtimeData)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -120,22 +120,22 @@ func getAppTextMeta(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (metas []c
 			MainText: float64(app.AppOpenMrNum),
 			SubText:  "MR " + sdk.I18n("Count"),
 			Operations: map[cptype.OperationKey]cptype.Operation{"clickGoto": {
-				ServerData: mrData,
+				ServerData: &mrData,
 			}},
 		},
 		{
 			MainText: float64(app.AppRuntimeNum),
 			SubText:  "Runtime " + sdk.I18n("Count"),
 			Operations: map[cptype.OperationKey]cptype.Operation{"clickGoto": {
-				ServerData: runtimeData,
+				ServerData: &runtimeData,
 			}},
 		},
 	}
 	return
 }
 func (wc *WorkCards) getProjTextMeta(sdk *cptype.SDK, project apistructs.WorkbenchProjOverviewItem) (metas []cardlist.TextMeta) {
-	todayData := cptype.OpServerData{Extra: make(cptype.ExtraMap)}
-	expireData := cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	todayData := make(cptype.OpServerData)
+	expireData := make(cptype.OpServerData)
 	metas = make([]cardlist.TextMeta, 0)
 	project.ProjectDTO.Type = types.ProjTypeDevops
 	switch project.ProjectDTO.Type {
@@ -157,12 +157,12 @@ func (wc *WorkCards) getProjTextMeta(sdk *cptype.SDK, project apistructs.Workben
 			Params:  map[string]interface{}{"projectId": project.ProjectDTO.ID},
 		}
 
-		err = common.Transfer(expireOp, &expireData.Extra)
+		err = common.Transfer(expireOp, &expireData)
 		if err != nil {
 			logrus.Error(err)
 			return
 		}
-		err = common.Transfer(todayOp, &todayData.Extra)
+		err = common.Transfer(todayOp, &todayData)
 		if err != nil {
 			logrus.Error(err)
 			return
@@ -234,14 +234,14 @@ func (wc *WorkCards) getProjectCardOps(params workbench.UrlParams) (ops map[cpty
 		logrus.Error(err)
 		return
 	}
-	serverData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	serverData := make(cptype.OpServerData)
 
-	err = common.Transfer(serviceOp, &serverData.Extra)
+	err = common.Transfer(serviceOp, &serverData)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	ops["clickGoto"] = cptype.Operation{ServerData: serverData}
+	ops["clickGoto"] = cptype.Operation{ServerData: &serverData}
 	return
 }
 
@@ -253,14 +253,14 @@ func (wc *WorkCards) getAppCardOps(app apistructs.AppWorkBenchItem) (ops map[cpt
 		Target:  "mspServiceList",
 		Params:  map[string]interface{}{"projectId": app.ProjectID, "appId": app.ID},
 	}
-	serverData := &cptype.OpServerData{Extra: make(cptype.ExtraMap)}
+	serverData := make(cptype.OpServerData)
 
-	err := common.Transfer(serviceOp, &serverData.Extra)
+	err := common.Transfer(serviceOp, &serverData)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
-	ops["clickGoto"] = cptype.Operation{ServerData: serverData}
+	ops["clickGoto"] = cptype.Operation{ServerData: &serverData}
 	return
 }
 func (wc *WorkCards) getAppIconOps(sdk *cptype.SDK, app apistructs.AppWorkBenchItem) (iops []cardlist.IconOperations) {
@@ -272,42 +272,42 @@ func (wc *WorkCards) getAppIconOps(sdk *cptype.SDK, app apistructs.AppWorkBenchI
 			"appId":     app.ID,
 		},
 	}
-	pipelineServerData := &cptype.OpServerData{}
-	apiDesignServerData := &cptype.OpServerData{}
-	deployData := &cptype.OpServerData{}
-	repositoryServerData := &cptype.OpServerData{}
+	pipelineServerData := make(cptype.OpServerData)
+	apiDesignServerData := make(cptype.OpServerData)
+	deployData := make(cptype.OpServerData)
+	repositoryServerData := make(cptype.OpServerData)
 	common.Transfer(gotoData, pipelineServerData)
 	common.Transfer(gotoData, apiDesignServerData)
 	common.Transfer(gotoData, deployData)
 	common.Transfer(gotoData, repositoryServerData)
-	pipelineServerData.Extra["target"] = "repo"
-	apiDesignServerData.Extra["target"] = "pipelineRoot"
-	deployData.Extra["target"] = "appApiDesign"
-	repositoryServerData.Extra["target"] = "deploy"
+	pipelineServerData["target"] = "repo"
+	apiDesignServerData["target"] = "pipelineRoot"
+	deployData["target"] = "appApiDesign"
+	repositoryServerData["target"] = "deploy"
 	iops = []cardlist.IconOperations{
 		{
 			Icon: "daimacangku",
 			Tip:  sdk.I18n("code repository"),
 			Operations: map[cptype.OperationKey]cptype.Operation{
-				"clickGoto": {ServerData: repositoryServerData},
+				"clickGoto": {ServerData: &repositoryServerData},
 			}},
 		{
 			Icon: "liushuixian",
 			Tip:  sdk.I18n("pipeline"),
 			Operations: map[cptype.OperationKey]cptype.Operation{
-				"clickGoto": {ServerData: pipelineServerData},
+				"clickGoto": {ServerData: &pipelineServerData},
 			}},
 		{
 			Icon: "Apisheji",
 			Tip:  sdk.I18n("api design"),
 			Operations: map[cptype.OperationKey]cptype.Operation{
-				"clickGoto": {ServerData: apiDesignServerData},
+				"clickGoto": {ServerData: &apiDesignServerData},
 			}},
 		{
 			Icon: "bushuzhongxin-3ldgif37",
 			Tip:  sdk.I18n("deploy center"),
 			Operations: map[cptype.OperationKey]cptype.Operation{
-				"clickGoto": {ServerData: deployData},
+				"clickGoto": {ServerData: &deployData},
 			}},
 	}
 	return
@@ -326,25 +326,25 @@ func (wc *WorkCards) getProjIconOps(sdk *cptype.SDK, project apistructs.Workbenc
 
 	switch project.ProjectDTO.Type {
 	case types.ProjTypeMSP:
-		serviceListServerData := &cptype.OpServerData{}
-		monitorServerData := &cptype.OpServerData{}
-		traceServerData := &cptype.OpServerData{}
-		logAnalysisServerData := &cptype.OpServerData{}
+		serviceListServerData := make(cptype.OpServerData)
+		monitorServerData := make(cptype.OpServerData)
+		traceServerData := make(cptype.OpServerData)
+		logAnalysisServerData := make(cptype.OpServerData)
 		common.Transfer(gotoData, serviceListServerData)
 		common.Transfer(gotoData, monitorServerData)
 		common.Transfer(gotoData, traceServerData)
 		common.Transfer(gotoData, logAnalysisServerData)
-		serviceListServerData.Extra["target"] = "mspServiceList"
-		monitorServerData.Extra["target"] = "mspMonitorServiceAnalyze"
-		traceServerData.Extra["target"] = "microTrace"
-		logAnalysisServerData.Extra["target"] = "mspLogAnalyze"
+		serviceListServerData["target"] = "mspServiceList"
+		monitorServerData["target"] = "mspMonitorServiceAnalyze"
+		traceServerData["target"] = "microTrace"
+		logAnalysisServerData["target"] = "mspLogAnalyze"
 		return []cardlist.IconOperations{
 			{
 				Icon: "fuwuliebiao",
 				Tip:  sdk.I18n("service list"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
 					"clickGoto": {
-						ServerData: serviceListServerData,
+						ServerData: &serviceListServerData,
 					},
 				},
 			},
@@ -353,7 +353,7 @@ func (wc *WorkCards) getProjIconOps(sdk *cptype.SDK, project apistructs.Workbenc
 				Tip:  sdk.I18n("service list"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
 					"clickGoto": {
-						ServerData: monitorServerData,
+						ServerData: &monitorServerData,
 					},
 				},
 			},
@@ -362,7 +362,7 @@ func (wc *WorkCards) getProjIconOps(sdk *cptype.SDK, project apistructs.Workbenc
 				Tip:  sdk.I18n("service list"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
 					"clickGoto": {
-						ServerData: traceServerData,
+						ServerData: &traceServerData,
 					},
 				},
 			},
@@ -371,62 +371,62 @@ func (wc *WorkCards) getProjIconOps(sdk *cptype.SDK, project apistructs.Workbenc
 				Tip:  sdk.I18n("service list"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
 					"clickGoto": {
-						ServerData: logAnalysisServerData,
+						ServerData: &logAnalysisServerData,
 					},
 				},
 			},
 		}
 	case types.ProjTypeDevops:
-		projectManageServerData := &cptype.OpServerData{}
-		appDevelopServerData := &cptype.OpServerData{}
-		testManageServerData := &cptype.OpServerData{}
-		serviceMonitorServerData := &cptype.OpServerData{}
-		projectSettingServerData := &cptype.OpServerData{}
+		projectManageServerData := make(cptype.OpServerData)
+		appDevelopServerData := make(cptype.OpServerData)
+		testManageServerData := make(cptype.OpServerData)
+		serviceMonitorServerData := make(cptype.OpServerData)
+		projectSettingServerData := make(cptype.OpServerData)
 
 		common.Transfer(gotoData, projectManageServerData)
 		common.Transfer(gotoData, appDevelopServerData)
 		common.Transfer(gotoData, testManageServerData)
 		common.Transfer(gotoData, serviceMonitorServerData)
 		common.Transfer(gotoData, projectSettingServerData)
-		projectManageServerData.Extra["target"] = "projectAllIssue"
-		appDevelopServerData.Extra["target"] = "projectApps"
-		testManageServerData.Extra["target"] = "projectTestDashboard"
-		serviceMonitorServerData.Extra["target"] = "mspServiceList"
-		projectSettingServerData.Extra["target"] = "projectSetting"
+		projectManageServerData["target"] = "projectAllIssue"
+		appDevelopServerData["target"] = "projectApps"
+		testManageServerData["target"] = "projectTestDashboard"
+		serviceMonitorServerData["target"] = "mspServiceList"
+		projectSettingServerData["target"] = "projectSetting"
 		return []cardlist.IconOperations{
 			{
 				Icon: "xiangmuguanli",
 				Tip:  sdk.I18n("project manage"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
-					"clickGoto": {ServerData: projectManageServerData},
+					"clickGoto": {ServerData: &projectManageServerData},
 				},
 			},
 			{
 				Icon: "yingyongkaifa",
 				Tip:  sdk.I18n("app develop"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
-					"clickGoto": {ServerData: appDevelopServerData},
+					"clickGoto": {ServerData: &appDevelopServerData},
 				},
 			},
 			{
 				Icon: "ceshiguanli-3ldgif3i",
 				Tip:  sdk.I18n("test manage"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
-					"clickGoto": {ServerData: testManageServerData},
+					"clickGoto": {ServerData: &testManageServerData},
 				},
 			},
 			{
 				Icon: "xiangmuguanli",
 				Tip:  sdk.I18n("service monitor"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
-					"clickGoto": {ServerData: serviceMonitorServerData},
+					"clickGoto": {ServerData: &serviceMonitorServerData},
 				},
 			},
 			{
 				Icon: "xiangmushezhi",
 				Tip:  sdk.I18n("project setting"),
 				Operations: map[cptype.OperationKey]cptype.Operation{
-					"clickGoto": {ServerData: projectSettingServerData},
+					"clickGoto": {ServerData: &projectSettingServerData},
 				},
 			},
 		}

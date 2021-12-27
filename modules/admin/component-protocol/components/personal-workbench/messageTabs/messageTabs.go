@@ -69,12 +69,6 @@ type State struct {
 	Value string `json:"value"`
 }
 
-func init() {
-	base.InitProviderWithCreator(common.ScenarioKey, "workListFilter",
-		func() servicehub.Provider { return &MessageTabs{} },
-	)
-}
-
 func (f *MessageTabs) InitFromProtocol(ctx context.Context, c *cptype.Component, gs *cptype.GlobalStateData) error {
 	// component 序列化
 	b, err := json.Marshal(c)
