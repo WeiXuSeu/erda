@@ -195,6 +195,7 @@ type ProjectListRequest struct {
 	PageSize int  `query:"pageSize"`
 
 	ProjectIDs []uint64 `query:"projectIDs"`
+	KeepMsp    bool     `query:"keepMsp"`
 
 	// 是否只显示公开项目
 	IsPublic bool `query:"isPublic"`
@@ -466,6 +467,8 @@ type GetAllProjectsResponse struct {
 
 type GetModelProjectsMapRequest struct {
 	ProjectIDs []uint64 `json:"projectIDs"`
+
+	KeepMsp bool `json:"keepMsp"`
 }
 
 type GetModelProjectsMapResponse struct {
