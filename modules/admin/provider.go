@@ -26,6 +26,9 @@ import (
 	"github.com/erda-project/erda-infra/base/logs"
 	"github.com/erda-project/erda-infra/base/servicehub"
 	componentprotocol "github.com/erda-project/erda-infra/providers/component-protocol"
+	"github.com/erda-project/erda-infra/providers/component-protocol/protocol"
+	"github.com/erda-project/erda-infra/providers/i18n"
+	"github.com/erda-project/erda/bundle"
 	"github.com/erda-project/erda/modules/admin/dao"
 	"github.com/erda-project/erda/modules/admin/manager"
 	"github.com/erda-project/erda/modules/admin/services/workbench"
@@ -36,6 +39,9 @@ import (
 	"github.com/erda-project/erda/pkg/jsonstore/etcd"
 )
 
+//go:embed component-protocol/scenarios
+var scenarioFS embed.FS
+
 type Config struct {
 	Debug bool `default:"false" env:"DEBUG" desc:"enable debug logging"`
 }
@@ -45,6 +51,8 @@ type provider struct {
 
 	Log      logs.Logger
 	Protocol componentprotocol.Interface
+	CPTran   i18n.I18n       `autowired:"i18n@cp"`
+	Tran     i18n.Translator `translator:"common"`
 }
 
 func init() {
