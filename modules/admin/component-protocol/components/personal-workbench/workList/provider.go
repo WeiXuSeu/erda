@@ -69,9 +69,6 @@ func (l *WorkList) BeforeHandleOp(sdk *cptype.SDK) {
 	l.bdl = sdk.Ctx.Value(types.GlobalCtxKeyBundle).(*bundle.Bundle)
 	l.wbSvc = sdk.Ctx.Value(types.WorkbenchSvc).(*workbench.Workbench)
 
-	// set component version
-	l.sdk.Comp.Version = "2"
-
 	// get identity info
 	l.identity = apistructs.Identity{
 		UserID: sdk.Identity.UserID,
