@@ -240,14 +240,14 @@ func (l *WorkList) doFilterProj() (data *list.Data) {
 		logrus.Errorf("get msp common params failed, error: %v", err)
 		return
 	}
-	params := make(map[string]interface{})
-	err = common.Transfer(mspParams, &params)
-	if err != nil {
-		logrus.Errorf("transfer msp params failed, msp params: %+v, error: %v", mspParams, err)
-		return
-	}
 
-	for _, p := range projs.List {
+	for i, p := range projs.List {
+		params := make(map[string]interface{})
+		err = common.Transfer(mspParams[i], &params)
+		if err != nil {
+			logrus.Errorf("transfer msp params failed, msp params: %+v, error: %v", mspParams, err)
+			return
+		}
 		// get click goto issue query url
 		queries, err := l.wbSvc.GetIssueQueries(p.ProjectDTO.ID)
 		if err != nil {
